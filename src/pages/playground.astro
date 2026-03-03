@@ -1,0 +1,481 @@
+---
+import Layout from "../layouts/Layout.astro";
+import PlaygroundHeader from "../components/playground/PlaygroundHeader.astro";
+import PlaygroundSidebar from "../components/playground/PlaygroundSidebar.astro";
+import PlaygroundDropZones from "../components/playground/PlaygroundDropZones.astro";
+import PlaygroundEmptyState from "../components/playground/PlaygroundEmptyState.astro";
+import PlaygroundComparisonPanel from "../components/playground/PlaygroundComparisonPanel.astro";
+import { languages, type Language } from "../data/languages";
+import { codeExamples } from "../data/examples";
+
+const catClass: Record<Language["category"], string> = {
+  systems: "cat-systems",
+  web: "cat-web",
+  enterprise: "cat-enterprise",
+  scripting: "cat-scripting",
+  general: "cat-general",
+};
+---
+
+<Layout title="Playground — LangMatrix">
+  <div class="flex flex-col min-h-[calc(100vh-52px)]">
+    <PlaygroundHeader />
+    <div class="flex flex-1 overflow-hidden">
+      <PlaygroundSidebar languages={languages} catClass={catClass} />
+      <div id="pg-main" class="flex-1 overflow-y-auto scrollbar-thin flex flex-col gap-0">
+        <PlaygroundDropZones />
+        <PlaygroundEmptyState />
+        <PlaygroundComparisonPanel />
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<script define:vars={{ languagesData: languages, examplesData: codeExamples }}>
+  const LANGS = languagesData;
+  const EXAMPLES = examplesData;
+  const METRICS = [
+    { key: "performance", label: "Performance" },
+    { key: "memoryEfficiency", label: "Memory Effic." },
+    { key: "learnability", label: "Learnability" },
+    { key: "devSpeed", label: "Dev Speed" },
+    { key: "ecosystem", label: "Ecosystem" },
+    { key: "concurrency", label: "Concurrency" },
+    { key: "typeStrength", label: "Type Safety" },
+  ];
+
+  let slotA = null;
+  let slotB = null;
+
+  const langList = document.getElementById("lang-list");
+  const sidebarSearch = document.getElementById("sidebar-search");
+  const compPanel = document.getElementById("comparison-panel");
+  const emptyState = document.getElementById("empty-state");
+
+  sidebarSearch?.addEventListener("input", () => {
+    const q = sidebarSearch.value.toLowerCase();
+    langList?.querySelectorAll(".lang-chip").forEach((chip) => {
+      const name = chip.dataset.name?.toLowerCase() ?? "";
+      chip.style.display = name.includes(q) ? "" : "none";
+    });
+  });
+
+  langList?.addEventListener("dragstart", (e) => {
+    const chip = e.target.closest(".lang-chip");
+    if (!chip) return;
+    e.dataTransfer?.setData("langId", chip.dataset.id ?? "");
+    chip.classList.add("opacity-50");
+  });
+  langList?.addEventListener("dragend", (e) => {
+    const chip = e.target.closest(".lang-chip");
+    chip?.classList.remove("opacity-50");
+  });
+
+  function setupDropZone(slot) {
+    const zone = document.getElementById(`drop-${slot}`);
+    if (!zone) return;
+    zone.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      zone.classList.add("border-[var(--lime)]", "bg-[rgba(163,230,53,0.04)]");
+    });
+    zone.addEventListener("dragleave", () => {
+      zone.classList.remove("border-[var(--lime)]", "bg-[rgba(163,230,53,0.04)]");
+    });
+    zone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      zone.classList.remove("border-[var(--lime)]", "bg-[rgba(163,230,53,0.04)]");
+      const lang = LANGS.find((l) => l.id === e.dataTransfer?.getData("langId"));
+      if (lang) assignSlot(slot, lang);
+    });
+  }
+  setupDropZone("a");
+  setupDropZone("b");
+
+  langList?.addEventListener("click", (e) => {
+    const chip = e.target.closest(".lang-chip");
+    if (!chip) return;
+    const lang = LANGS.find((l) => l.id === chip.dataset.id);
+    if (!lang) return;
+    if (!slotA) assignSlot("a", lang);
+    else if (!slotB && slotA.id !== lang.id) assignSlot("b", lang);
+    else if (slotA.id === lang.id) assignSlot("a", lang);
+    else assignSlot("a", lang);
+  });
+
+  document.querySelectorAll(".slot-clear").forEach((btn) => {
+    btn.addEventListener("click", () => clearSlot(btn.dataset.slot));
+  });
+
+  function assignSlot(slot, lang) {
+    if (slot === "a") slotA = lang;
+    else slotB = lang;
+    renderSlotUI(slot, lang);
+    syncHighlightChips();
+    maybeRenderComparison();
+  }
+
+  function clearSlot(slot) {
+    if (slot === "a") slotA = null;
+    else slotB = null;
+    resetSlotUI(slot);
+    syncHighlightChips();
+    maybeRenderComparison();
+  }
+
+  function renderSlotUI(slot, lang) {
+    const placeholder = document.getElementById(`placeholder-${slot}`);
+    const filled = document.getElementById(`filled-${slot}`);
+    const iconEl = document.getElementById(`slot-${slot}-icon`);
+    const nameEl = document.getElementById(`slot-${slot}-name`);
+    const zone = document.getElementById(`drop-${slot}`);
+    if (!placeholder || !filled || !iconEl || !nameEl || !zone) return;
+    placeholder.classList.add("hidden");
+    filled.classList.remove("hidden");
+    filled.classList.add("flex");
+    iconEl.textContent = lang.icon;
+    nameEl.textContent = lang.name;
+    zone.style.borderColor = lang.color;
+    zone.style.background = lang.bgColor + "44";
+  }
+
+  function resetSlotUI(slot) {
+    const zone = document.getElementById(`drop-${slot}`);
+    const placeholder = document.getElementById(`placeholder-${slot}`);
+    const filled = document.getElementById(`filled-${slot}`);
+    if (!zone || !placeholder || !filled) return;
+    filled.classList.add("hidden");
+    filled.classList.remove("flex");
+    placeholder.classList.remove("hidden");
+    zone.style.borderColor = "";
+    zone.style.background = "";
+  }
+
+  function syncHighlightChips() {
+    const selectedIds = [slotA?.id, slotB?.id].filter(Boolean);
+    langList?.querySelectorAll(".lang-chip").forEach((chip) => {
+      const isSelected = selectedIds.includes(chip.dataset.id ?? "");
+      chip.classList.toggle("border-[var(--lime)]", isSelected);
+      chip.classList.toggle("bg-[rgba(163,230,53,0.06)]", isSelected);
+    });
+  }
+
+  function maybeRenderComparison() {
+    if (slotA && slotB) {
+      emptyState?.classList.add("hidden");
+      compPanel?.classList.remove("hidden");
+      renderComparison(slotA, slotB);
+    } else {
+      compPanel?.classList.add("hidden");
+      emptyState?.classList.remove("hidden");
+    }
+  }
+
+  function renderComparison(a, b) {
+    drawRadar(a, b);
+    renderBars(a, b);
+    renderSpecs(a, b);
+    renderWhen(a, b);
+    renderCode(a, b);
+    const runnerEl = document.getElementById("code-runner-section");
+    if (runnerEl) renderCodeRunner(runnerEl, a, b);
+  }
+
+  function drawRadar(a, b) {
+    const canvas = document.getElementById("radar-canvas");
+    const ctx = canvas?.getContext("2d");
+    if (!ctx) return;
+    const W = canvas.width;
+    const H = canvas.height;
+    const cx = W / 2;
+    const cy = H / 2;
+    const R = Math.min(W, H) / 2 - 52;
+    const N = METRICS.length;
+    ctx.clearRect(0, 0, W, H);
+    for (let ring = 1; ring <= 5; ring++) {
+      ctx.beginPath();
+      for (let j = 0; j < N; j++) {
+        const angle = (Math.PI * 2 * j) / N - Math.PI / 2;
+        const r = (R * ring) / 5;
+        const x = cx + r * Math.cos(angle);
+        const y = cy + r * Math.sin(angle);
+        j === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.strokeStyle = "rgba(255,255,255,0.07)";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+    for (let j = 0; j < N; j++) {
+      const angle = (Math.PI * 2 * j) / N - Math.PI / 2;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + R * Math.cos(angle), cy + R * Math.sin(angle));
+      ctx.strokeStyle = "rgba(255,255,255,0.07)";
+      ctx.stroke();
+    }
+    function drawPolygon(lang, color) {
+      ctx.beginPath();
+      METRICS.forEach((m, j) => {
+        const angle = (Math.PI * 2 * j) / N - Math.PI / 2;
+        const val = lang[m.key] / 10;
+        const x = cx + R * val * Math.cos(angle);
+        const y = cy + R * val * Math.sin(angle);
+        j === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      });
+      ctx.closePath();
+      ctx.fillStyle = color + "28";
+      ctx.fill();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      METRICS.forEach((m, j) => {
+        const angle = (Math.PI * 2 * j) / N - Math.PI / 2;
+        const val = lang[m.key] / 10;
+        const x = cx + R * val * Math.cos(angle);
+        const y = cy + R * val * Math.sin(angle);
+        ctx.beginPath();
+        ctx.arc(x, y, 4, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.fill();
+      });
+    }
+    drawPolygon(a, a.color);
+    drawPolygon(b, b.color);
+    ctx.font = "10px 'JetBrains Mono', monospace";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    METRICS.forEach((m, j) => {
+      const angle = (Math.PI * 2 * j) / N - Math.PI / 2;
+      const labelR = R + 28;
+      const x = cx + labelR * Math.cos(angle);
+      const y = cy + labelR * Math.sin(angle);
+      ctx.fillStyle = "rgba(160,160,176,0.7)";
+      ctx.fillText(m.label, x, y);
+    });
+    const legend = document.getElementById("radar-legend");
+    if (legend) {
+      legend.innerHTML = [a, b].map((lang) => `
+        <div class="flex items-center gap-3">
+          <span style="width:12px;height:12px;border-radius:50%;background:${lang.color};flex-shrink:0;display:inline-block"></span>
+          <span style="font-size:20px;line-height:1">${lang.icon}</span>
+          <span style="font-family:var(--font-mono);font-size:12px;color:${lang.color}">${lang.name}</span>
+        </div>
+      `).join("");
+    }
+  }
+
+  function renderBars(a, b) {
+    const el = document.getElementById("bars-section");
+    if (!el) return;
+    el.innerHTML = METRICS.map((m) => {
+      const av = a[m.key];
+      const bv = b[m.key];
+      const winner = av > bv ? "a" : bv > av ? "b" : "tie";
+      const winnerBadge = winner === "tie"
+        ? `<span style="font-family:var(--font-mono);font-size:8px;padding:2px 8px;border-radius:20px;background:rgba(255,255,255,0.06);color:var(--tx3);letter-spacing:1px">TIE</span>`
+        : `<span style="font-family:var(--font-mono);font-size:8px;padding:2px 8px;border-radius:20px;background:${winner === "a" ? a.color : b.color};color:#000;letter-spacing:1px">${winner === "a" ? a.icon : b.icon} WIN</span>`;
+      return `
+        <div style="display:grid;grid-template-columns:1fr 110px 1fr;gap:12px;align-items:center">
+          <div style="display:flex;flex-direction:column;gap:5px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font-family:var(--font-mono);font-size:10px;color:${a.color}">${a.icon} ${a.name}</span>
+              <span style="font-family:var(--font-mono);font-size:10px;font-weight:500;color:var(--tx)">${av}/10</span>
+            </div>
+            <div style="height:5px;background:var(--s4);border-radius:3px;overflow:hidden;display:flex;justify-content:flex-end">
+              <div style="width:${av * 10}%;height:100%;background:${a.color};border-radius:3px;animation:barGrow 0.8s cubic-bezier(0.22,1,0.36,1) both;transform-origin:right center"></div>
+            </div>
+          </div>
+          <div style="text-align:center;display:flex;flex-direction:column;gap:5px;align-items:center">
+            <span style="font-family:var(--font-mono);font-size:8px;text-transform:uppercase;letter-spacing:1.5px;color:var(--tx3)">${m.label}</span>
+            ${winnerBadge}
+          </div>
+          <div style="display:flex;flex-direction:column;gap:5px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <span style="font-family:var(--font-mono);font-size:10px;font-weight:500;color:var(--tx)">${bv}/10</span>
+              <span style="font-family:var(--font-mono);font-size:10px;color:${b.color}">${b.icon} ${b.name}</span>
+            </div>
+            <div style="height:5px;background:var(--s4);border-radius:3px;overflow:hidden">
+              <div style="width:${bv * 10}%;height:100%;background:${b.color};border-radius:3px;animation:barGrow 0.8s cubic-bezier(0.22,1,0.36,1) both;transform-origin:left center"></div>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  function renderSpecs(a, b) {
+    const el = document.getElementById("specs-section");
+    if (!el) return;
+    const rows = [
+      ["Performance", a.performanceLabel, b.performanceLabel],
+      ["Memory", a.memoryLabel, b.memoryLabel],
+      ["Latency", a.latency, b.latency],
+      ["GC Model", a.gcModel, b.gcModel],
+      ["Typing", a.typing, b.typing],
+      ["Paradigm", a.paradigm, b.paradigm],
+      ["Job Market", a.jobMarket, b.jobMarket],
+      ["Salary", a.salaryRange, b.salaryRange],
+      ["Born", String(a.year), String(b.year)],
+      ["Creator", a.creator, b.creator],
+    ];
+    el.innerHTML = `
+      <table style="width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:11px">
+        <thead>
+          <tr>
+            <th style="text-align:left;padding:10px 32px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--tx3);border-bottom:1px solid var(--b2);background:var(--s2)">Spec</th>
+            <th style="text-align:left;padding:10px 20px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:${a.color};border-bottom:1px solid var(--b2);background:var(--s2)">${a.icon} ${a.name}</th>
+            <th style="text-align:left;padding:10px 20px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:${b.color};border-bottom:1px solid var(--b2);background:var(--s2)">${b.icon} ${b.name}</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map(([label, av, bv], i) => `
+            <tr style="border-bottom:1px solid var(--b1);${i % 2 === 0 ? "" : "background:var(--s2)"}">
+              <td style="padding:10px 32px;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--tx3)">${label}</td>
+              <td style="padding:10px 20px;color:var(--tx2)">${av}</td>
+              <td style="padding:10px 20px;color:var(--tx2)">${bv}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    `;
+  }
+
+  function renderWhen(a, b) {
+    const el = document.getElementById("when-section");
+    if (!el) return;
+    function bestFor(lang, other) {
+      const wins = [];
+      if (lang.performance > other.performance) wins.push("Performance-critical and low-level applications");
+      if (lang.memoryEfficiency > other.memoryEfficiency) wins.push("Memory-constrained environments");
+      if (lang.learnability > other.learnability) wins.push("Teams new to the language or beginners");
+      if (lang.devSpeed > other.devSpeed) wins.push("Rapid prototyping and high developer velocity");
+      if (lang.ecosystem > other.ecosystem) wins.push("Rich third-party library needs");
+      if (lang.concurrency > other.concurrency) wins.push("Highly concurrent or parallel workloads");
+      if (lang.typeStrength > other.typeStrength) wins.push("Large codebases that need compile-time safety");
+      return wins.length ? wins : ["Specific niche use-cases — see use cases above"];
+    }
+    function panel(lang, other) {
+      const items = bestFor(lang, other);
+      return `
+        <div style="padding:28px 32px;display:flex;flex-direction:column;gap:16px;border-top:3px solid ${lang.color}">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:28px;line-height:1">${lang.icon}</span>
+            <span style="font-family:var(--font-mono);font-size:16px;letter-spacing:2px;color:${lang.color}">${lang.name}</span>
+          </div>
+          <p style="font-family:var(--font-mono);font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--tx3)">Choose ${lang.name} when:</p>
+          <ul style="list-style:none;display:flex;flex-direction:column;gap:8px">
+            ${items.map((item) => `
+              <li style="display:flex;align-items:flex-start;gap:8px">
+                <span style="width:5px;height:5px;border-radius:50%;background:${lang.color};flex-shrink:0;margin-top:6px"></span>
+                <span style="font-family:var(--font-mono);font-size:11px;color:var(--tx2);line-height:1.5">${item}</span>
+              </li>
+            `).join("")}
+          </ul>
+          <blockquote style="border-left:2px solid var(--b2);padding-left:12px;font-size:11px;font-style:italic;color:var(--tx3);line-height:1.7">${lang.verdict}</blockquote>
+        </div>
+      `;
+    }
+    el.innerHTML = panel(a, b) + panel(b, a);
+  }
+
+  function renderCode(a, b) {
+    const el = document.getElementById("code-section");
+    if (!el) return;
+    function codePanel(lang) {
+      const ex = EXAMPLES[lang.id]?.[0] ?? null;
+      const escapedCode = ex ? ex.code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") : "// No example available yet";
+      return `
+        <div style="display:flex;flex-direction:column;border-top:3px solid ${lang.color}">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid var(--b1);background:var(--s1)">
+            <span style="font-family:var(--font-mono);font-size:11px;color:${lang.color};letter-spacing:1px">${lang.icon} ${lang.name}</span>
+            <span style="font-family:var(--font-mono);font-size:9px;color:var(--tx3);letter-spacing:0.5px">${ex?.title ?? ""}</span>
+          </div>
+          ${ex ? `<p style="font-family:var(--font-mono);font-size:10px;color:var(--tx3);padding:10px 20px;border-bottom:1px solid var(--b1);font-style:italic;line-height:1.5">${ex.description}</p>` : ""}
+          <pre style="margin:0;padding:20px;font-family:var(--font-mono);font-size:11.5px;line-height:1.75;color:#c9d1d9;overflow-x:auto;white-space:pre;tab-size:2;flex:1;background:#0d1117"><code>${escapedCode}</code></pre>
+        </div>
+      `;
+    }
+    el.innerHTML = codePanel(a) + codePanel(b);
+  }
+
+  function renderCodeRunner(container, a, b) {
+    const runnable = (id) => id === "javascript" || id === "typescript";
+    function runnerPanel(lang, slot) {
+      const canRun = runnable(lang.id);
+      return `
+        <div id="runner-${slot}" class="runner-panel" style="display:flex;flex-direction:column;border-top:3px solid ${lang.color}">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid var(--b1);background:var(--s1)">
+            <span style="font-family:var(--font-mono);font-size:11px;color:${lang.color}">${lang.icon} ${lang.name}</span>
+            ${canRun ? `<button type="button" class="runner-run font-mono text-[10px] uppercase tracking-[1px] px-3 py-1.5 rounded bg-[var(--lime)] text-black hover:bg-white transition-colors" data-slot="${slot}">Run</button>` : "<span style=\"font-family:var(--font-mono);font-size:9px;color:var(--tx3)\">Run only for JavaScript/TypeScript</span>"}
+          </div>
+          <textarea class="runner-code font-mono text-[11px] p-4 w-full min-h-[140px] resize-y bg-[#0d1117] text-[#c9d1d9] border-0 outline-none" style="tab-size:2" data-slot="${slot}" spellcheck="false"></textarea>
+          <div class="runner-output font-mono text-[10px] p-4 border-t border-[var(--b1)] bg-[var(--s2)] min-h-[80px]" data-slot="${slot}" style="white-space:pre-wrap;word-break:break-all"></div>
+        </div>
+      `;
+    }
+    container.innerHTML = runnerPanel(a, "a") + runnerPanel(b, "b");
+
+    ["a", "b"].forEach((slot) => {
+      const ta = container.querySelector(`.runner-code[data-slot="${slot}"]`);
+      const lang = slot === "a" ? a : b;
+      const initialCode = EXAMPLES[lang.id]?.[0]?.code ?? "// No example";
+      if (ta) ta.value = initialCode;
+    });
+
+    container.querySelectorAll(".runner-run").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const slot = btn.dataset.slot;
+        const lang = slot === "a" ? a : b;
+        const ta = container.querySelector(`.runner-code[data-slot="${slot}"]`);
+        const out = container.querySelector(`.runner-output[data-slot="${slot}"]`);
+        if (!ta || !out || !runnable(lang.id)) return;
+        const code = ta.value;
+        const logs = [];
+        const origLog = console.log;
+        const origError = console.error;
+        console.log = (...args) => { logs.push({ type: "log", text: args.map((x) => (typeof x === "object" ? JSON.stringify(x) : String(x))).join(" ") }); };
+        console.error = (...args) => { logs.push({ type: "error", text: args.map(String).join(" ") }); };
+        const t0 = performance.now();
+        let memBefore, memAfter;
+        if (typeof performance !== "undefined" && performance.memory) {
+          memBefore = performance.memory.usedJSHeapSize;
+        }
+        try {
+          new Function(code)();
+        } catch (err) {
+          logs.push({ type: "error", text: err.message || String(err) });
+        }
+        const t1 = performance.now();
+        if (typeof performance !== "undefined" && performance.memory) {
+          memAfter = performance.memory.usedJSHeapSize;
+        }
+        console.log = origLog;
+        console.error = origError;
+        const timeMs = (t1 - t0).toFixed(2);
+        const memStr = memBefore != null && memAfter != null
+          ? `${((memAfter - memBefore) / 1048576).toFixed(2)} MB delta (heap)`
+          : "N/A (Chrome only)";
+        const consoleText = logs.length
+          ? logs.map((l) => (l.type === "error" ? `Error: ${l.text}` : l.text)).join("\n")
+          : "(no output)";
+        out.textContent = `Time: ${timeMs} ms\nMemory: ${memStr}\n\nConsole:\n${consoleText}`;
+      });
+    });
+  }
+
+  try {
+    const stored = sessionStorage.getItem("langCompare");
+    if (stored) {
+      const arr = JSON.parse(stored);
+      if (arr[0]) {
+        const la = LANGS.find((l) => l.id === arr[0].id);
+        if (la) assignSlot("a", la);
+      }
+      if (arr[1]) {
+        const lb = LANGS.find((l) => l.id === arr[1].id);
+        if (lb) assignSlot("b", lb);
+      }
+    }
+  } catch (_) {}
+  maybeRenderComparison();
+</script>

@@ -1,11 +1,405 @@
 ---
-import Welcome from '../components/Welcome.astro';
-import Layout from '../layouts/Layout.astro';
+import Layout from "../layouts/Layout.astro";
+import LanguageCard from "../components/LanguageCard.astro";
+import { languages, type Language } from "../data/languages";
 
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+const categories: Array<{ id: Language["category"] | "all"; label: string }> = [
+  { id: "all",        label: "All" },
+  { id: "systems",    label: "Systems" },
+  { id: "web",        label: "Web" },
+  { id: "enterprise", label: "Enterprise" },
+  { id: "scripting",  label: "Scripting / AI" },
+  { id: "general",    label: "General" },
+];
+
+function tablePillClass(v: number): string {
+  if (v >= 8) return "text-green-400 bg-green-400/10";
+  if (v >= 5) return "text-amber-400 bg-amber-400/10";
+  return "text-red-400 bg-red-400/10";
+}
+
+const jobTableClass: Record<Language["jobMarket"], string> = {
+  "very-high": "text-green-400 bg-green-400/10",
+  high:        "text-blue-400 bg-blue-400/10",
+  medium:      "text-amber-400 bg-amber-400/10",
+  low:         "text-red-400 bg-red-400/10",
+};
 ---
 
-<Layout>
-	<Welcome />
+<Layout title="LangMatrix — Programming Language Comparison">
+  <section class="relative overflow-hidden border-b border-[var(--b1)] bg-[var(--s1)] px-8 sm:px-10 pt-16 pb-24 md:pt-20 md:pb-28">
+    <div
+      class="pointer-events-none absolute inset-0 opacity-[0.02]"
+      style="background-image: linear-gradient(var(--b1) 1px, transparent 1px), linear-gradient(90deg, var(--b1) 1px, transparent 1px); background-size: 48px 48px;"
+    />
+    <div
+      class="pointer-events-none absolute -right-40 bottom-0 top-1/3 w-[400px] rounded-full opacity-[0.06]"
+      style="background: radial-gradient(circle, #a3e635 0%, transparent 65%)"
+    />
+
+    <div class="relative max-w-3xl mx-auto animate-fade-up">
+      <p class="font-mono text-[10px] uppercase tracking-[4px] text-[var(--lime)] mb-5">
+        // dev reference 2025
+      </p>
+
+      <h1 class="font-serif text-[clamp(52px,8vw,96px)] leading-[0.92] tracking-tight text-[var(--tx)] mb-6">
+        Every Language.<br />
+        <em class="not-italic text-[var(--lime)]">Honestly Ranked.</em>
+      </h1>
+
+      <p class="font-mono text-sm text-[var(--tx3)] leading-relaxed max-w-lg mb-10">
+        Performance, memory, latency, ecosystem, concurrency — {languages.length} languages,
+        zero marketing speak. Hover any metric for the full story.
+      </p>
+      <div class="flex items-center gap-8 mb-10">
+        {
+          (
+            [
+              [String(languages.length), "Languages"],
+              ["6", "Metrics Each"],
+              ["∞", "Debates Ended"],
+            ] as [string, string][]
+          ).map(([num, label], i) => (
+            <div
+              class="flex flex-col gap-0.5 animate-fade-up"
+              style={`animation-delay: ${200 + i * 80}ms`}
+            >
+              <span class="font-serif text-4xl text-[var(--lime)] leading-none">{num}</span>
+              <span class="font-mono text-[9px] uppercase tracking-[2px] text-[var(--tx3)]">
+                {label}
+              </span>
+            </div>
+          ))
+        }
+      </div>
+
+      <a
+        href="/playground"
+        class="
+          inline-flex items-center gap-2
+          font-mono text-[11px] uppercase tracking-[2px]
+          bg-[var(--lime)] text-black px-6 py-3
+          hover:bg-white transition-colors duration-200
+          animate-fade-up delay-400
+        "
+      >
+        ⚖ Open Playground
+        <span class="opacity-60">→</span>
+      </a>
+    </div>
+  </section>
+  <div
+    class="
+      sticky top-[56px] z-10
+      bg-[var(--bg)] border-b border-[var(--b2)]
+      shadow-[0_4px_20px_rgba(0,0,0,0.25)]
+      px-6 py-3.5 flex items-center gap-3 flex-wrap
+    "
+  >
+    <div id="filter-group" class="flex gap-1.5 flex-wrap">
+      {
+        categories.map((cat) => (
+          <button
+            class:list={[
+              "filter-pill font-mono text-[9px] uppercase tracking-[1.5px] px-3 py-1.5 rounded border transition-all duration-200 cursor-pointer",
+              cat.id === "all"
+                ? "bg-[var(--lime)] text-black border-[var(--lime)]"
+                : "bg-transparent text-[var(--tx3)] border-[var(--b1)] hover:border-[var(--b2)] hover:text-[var(--tx)]",
+            ]}
+            data-cat={cat.id}
+          >
+            {cat.label}
+          </button>
+        ))
+      }
+    </div>
+    <div class="w-px h-5 bg-[var(--b1)] hidden sm:block" aria-hidden="true" />
+    <div class="flex items-center gap-1.5">
+      <span class="font-mono text-[8px] uppercase tracking-[1.5px] text-[var(--tx3)]">
+        Sort:
+      </span>
+      {
+        (
+          [
+            ["name",        "Name"],
+            ["performance", "Perf"],
+            ["learnability","Learn"],
+            ["devSpeed",    "Dev Spd"],
+            ["ecosystem",   "Ecosystem"],
+          ] as [string, string][]
+        ).map(([key, label]) => (
+          <button
+            class="sort-btn font-mono text-[9px] uppercase tracking-[1px] px-2 py-1 rounded text-[var(--tx3)] hover:text-[var(--lime)] transition-colors cursor-pointer"
+            data-sort={key}
+          >
+            {label}
+          </button>
+        ))
+      }
+    </div>
+    <div class="ml-auto flex items-center gap-2 border border-[var(--b1)] rounded px-3 py-1.5 bg-[var(--s2)]">
+      <span class="font-mono text-[10px] text-[var(--lime)]">//</span>
+      <input
+        id="search-input"
+        type="text"
+        placeholder="filter..."
+        autocomplete="off"
+        class="bg-transparent font-mono text-[11px] text-[var(--tx)] placeholder:text-[var(--tx3)] outline-hidden w-36"
+      />
+    </div>
+    <span
+      id="result-count"
+      class="font-mono text-[9px] text-[var(--tx3)] tracking-[1px] hidden sm:block"
+    >
+      {languages.length} languages
+    </span>
+  </div>
+  <div
+    id="cards-grid"
+    class="grid gap-4 p-4 sm:p-6 bg-[var(--s2)]"
+    style="grid-template-columns: repeat(auto-fill, minmax(360px, 1fr))"
+  >
+    {languages.map((lang, i) => <LanguageCard lang={lang} index={i} />)}
+  </div>
+  <section class="px-8 py-20 border-t border-[var(--b1)]">
+    <div class="mb-10">
+      <h2 class="font-serif text-5xl text-[var(--tx)] mb-2">Quick Matrix</h2>
+      <p class="font-mono text-[10px] uppercase tracking-[2px] text-[var(--tx3)]">
+        // all languages at a glance
+      </p>
+    </div>
+
+    <div class="overflow-x-auto scrollbar-thin">
+      <table class="w-full border-collapse font-mono text-[11px]">
+        <thead>
+          <tr>
+            {
+              [
+                "Language",
+                "Perf",
+                "Memory",
+                "Learn",
+                "Dev Spd",
+                "Ecosystem",
+                "Concurr.",
+                "Type Safety",
+                "Job Market",
+                "Salary",
+                "Paradigm",
+              ].map((h) => (
+                <th class="sticky top-0 text-left px-4 py-3 bg-[var(--s2)] text-[9px] uppercase tracking-[2px] text-[var(--lime)] border-b border-[var(--b2)] whitespace-nowrap">
+                  {h}
+                </th>
+              ))
+            }
+          </tr>
+        </thead>
+        <tbody>
+          {
+            languages.map((lang) => (
+              <tr class="border-b border-[var(--b1)] hover:bg-[var(--s2)] transition-colors duration-150 group">
+                <td class="px-4 py-3 whitespace-nowrap">
+                  <div class="flex items-center gap-2">
+                    <span class="text-base leading-none">{lang.icon}</span>
+                    <span class="text-[var(--tx)] font-medium tracking-wide">
+                      {lang.name}
+                    </span>
+                    <span class="text-[var(--tx3)] text-[9px]">{lang.year}</span>
+                  </div>
+                </td>
+                {
+                  (
+                    [
+                      lang.performance,
+                      lang.memoryEfficiency,
+                      lang.learnability,
+                      lang.devSpeed,
+                      lang.ecosystem,
+                      lang.concurrency,
+                      lang.typeStrength,
+                    ] as number[]
+                  ).map((v) => (
+                    <td class="px-4 py-3">
+                      <span
+                        class:list={[
+                          "inline-block px-2 py-0.5 rounded text-[9px]",
+                          tablePillClass(v),
+                        ]}
+                      >
+                        {v}/10
+                      </span>
+                    </td>
+                  ))
+                }
+                <td class="px-4 py-3">
+                  <span
+                    class:list={[
+                      "inline-block px-2 py-0.5 rounded text-[9px]",
+                      jobTableClass[lang.jobMarket],
+                    ]}
+                  >
+                    {lang.jobMarket.replace("-", " ")}
+                  </span>
+                </td>
+                <td class="px-4 py-3 text-[var(--tx3)] whitespace-nowrap">
+                  {lang.salaryRange}
+                </td>
+                <td class="px-4 py-3 text-[var(--tx3)] whitespace-nowrap">
+                  {lang.paradigm}
+                </td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+  <section class="border-t border-[var(--b1)] px-10 py-24 flex flex-col items-center text-center gap-6">
+    <p class="font-mono text-[10px] uppercase tracking-[4px] text-[var(--lime)]">
+      // side-by-side
+    </p>
+    <h2 class="font-serif text-5xl md:text-6xl text-[var(--tx)] leading-tight">
+      Want to compare two<br /><em class="not-italic text-[var(--lime)]">head to head?</em>
+    </h2>
+    <p class="font-mono text-sm text-[var(--tx3)] max-w-md leading-relaxed">
+      Drag any two languages into the playground — radar chart, metric bars, and
+      code examples side by side.
+    </p>
+    <a
+      href="/playground"
+      class="
+        font-mono text-[11px] uppercase tracking-[2px]
+        bg-[var(--lime)] text-black px-8 py-4
+        hover:bg-white transition-colors duration-200
+      "
+    >
+      Open Playground →
+    </a>
+  </section>
 </Layout>
+
+<script>
+  const grid = document.getElementById("cards-grid")!;
+  const filterGrp = document.getElementById("filter-group")!;
+  const searchEl = document.getElementById("search-input") as HTMLInputElement;
+  const countEl = document.getElementById("result-count")!;
+  let activeCat = "all";
+  let activeSearch = "";
+
+  function getCards(): HTMLElement[] {
+    return Array.from(grid.querySelectorAll<HTMLElement>("[data-id]"));
+  }
+
+  function applyFilters(): void {
+    let count = 0;
+    getCards().forEach((card) => {
+      const cat  = card.dataset.category ?? "";
+      const name = card.dataset.name ?? "";
+      const show =
+        (activeCat === "all" || cat === activeCat) &&
+        name.includes(activeSearch);
+      card.style.display = show ? "" : "none";
+      if (show) count++;
+    });
+    countEl.textContent = `${count} language${count !== 1 ? "s" : ""}`;
+  }
+
+  filterGrp.addEventListener("click", (e) => {
+    const btn = (e.target as HTMLElement).closest<HTMLButtonElement>(".filter-pill");
+    if (!btn) return;
+
+    activeCat = btn.dataset.cat ?? "all";
+    filterGrp.querySelectorAll(".filter-pill").forEach((b) => {
+      const el = b as HTMLButtonElement;
+      el.classList.remove("bg-[var(--lime)]", "text-black", "border-[var(--lime)]");
+      el.classList.add("bg-transparent", "text-[var(--tx3)]", "border-[var(--b1)]");
+    });
+    btn.classList.add("bg-[var(--lime)]", "text-black", "border-[var(--lime)]");
+    btn.classList.remove("bg-transparent", "text-[var(--tx3)]", "border-[var(--b1)]");
+
+    applyFilters();
+  });
+
+  searchEl.addEventListener("input", () => {
+    activeSearch = searchEl.value.toLowerCase().trim();
+    applyFilters();
+  });
+
+  const sortBtns = document.querySelectorAll<HTMLButtonElement>(".sort-btn");
+  sortBtns.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      sortBtns.forEach((b) =>
+        b.classList.remove("text-[var(--lime)]", "underline")
+      );
+      btn.classList.add("text-[var(--lime)]");
+
+      const key = btn.dataset.sort ?? "name";
+      const cards = getCards();
+
+      cards.sort((a, b) => {
+        const aId = a.dataset.id ?? "";
+        const bId = b.dataset.id ?? "";
+        if (key === "name") return aId.localeCompare(bId);
+        const aVal = Number(a.dataset[key] ?? 0);
+        const bVal = Number(b.dataset[key] ?? 0);
+        return bVal - aVal;
+      });
+
+      cards.forEach((c) => grid.appendChild(c));
+    });
+  });
+
+  type CompareEntry = { id: string; name: string; icon: string };
+  let selected: CompareEntry[] = [];
+  try {
+    const stored = sessionStorage.getItem("langCompare");
+    if (stored) selected = JSON.parse(stored);
+  } catch (_) {}
+
+  function syncCompareBtns(): void {
+    document.querySelectorAll<HTMLButtonElement>(".compare-btn").forEach((btn) => {
+      const isSelected = selected.some((s) => s.id === btn.dataset.id);
+      btn.textContent = isSelected ? "✓ Selected" : "+ Compare";
+      if (isSelected) {
+        btn.classList.add("bg-[var(--lime)]", "text-black", "border-[var(--lime)]");
+        btn.classList.remove("text-[var(--tx3)]");
+      } else {
+        btn.classList.remove("bg-[var(--lime)]", "text-black", "border-[var(--lime)]");
+        btn.classList.add("text-[var(--tx3)]");
+      }
+    });
+  }
+
+  syncCompareBtns();
+
+  grid.addEventListener("click", (e) => {
+    const btn = (e.target as HTMLElement).closest<HTMLButtonElement>(".compare-btn");
+    if (!btn) return;
+
+    const entry: CompareEntry = {
+      id:   btn.dataset.id!,
+      name: btn.dataset.name!,
+      icon: btn.dataset.icon!,
+    };
+
+    const idx = selected.findIndex((s) => s.id === entry.id);
+    if (idx >= 0) {
+      selected.splice(idx, 1);
+    } else if (selected.length < 2) {
+      selected.push(entry);
+    } else {
+      selected.shift();
+      selected.push(entry);
+    }
+
+    sessionStorage.setItem("langCompare", JSON.stringify(selected));
+    syncCompareBtns();
+
+    if (selected.length === 2) {
+      const go = confirm(
+        `Compare ${selected[0].name} vs ${selected[1].name}?\nOpen the playground?`
+      );
+      if (go) window.location.href = "/playground";
+    }
+  });
+</script>

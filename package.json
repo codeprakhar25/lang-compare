@@ -2,13 +2,24 @@
   "name": "language-overview",
   "type": "module",
   "version": "0.0.1",
+  "description": "A beautiful, honest comparison of programming languages",
   "scripts": {
-    "dev": "astro dev",
+    "astro": "astro",
     "build": "astro build",
-    "preview": "astro preview",
-    "astro": "astro"
+    "dev": "astro dev",
+    "preview": "astro preview"
   },
   "dependencies": {
-    "astro": "^5.17.1"
+    "@astrojs/react": "^4.1.0",
+    "@tailwindcss/vite": "^4.2.1",
+    "astro": "^5.17.1",
+    "astro-sst": "3.1.4",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "sst": "4.1.4",
+    "tailwindcss": "^4.2.1"
+  },
+  "devDependencies": {
+    "@types/node": "^25.3.3"
   }
 }

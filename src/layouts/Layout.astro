@@ -1,23 +1,66 @@
+---
+import "../styles/globals.css";
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const {
+  title,
+  description = "An honest, detailed comparison of programming languages — performance, memory, latency, pros and cons.",
+} = Astro.props;
+
+const currentPath = Astro.url.pathname;
+const isPlayground = currentPath.includes("playground");
+---
+
 <!doctype html>
 <html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro Basics</title>
-	</head>
-	<body>
-		<slot />
-	</body>
-</html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <title>{title} · LangMatrix</title>
+  </head>
 
-<style>
-	html,
-	body {
-		margin: 0;
-		width: 100%;
-		height: 100%;
-	}
-</style>
+  <body>
+    <nav class="site-nav">
+      <a
+        href="/"
+        class="font-mono text-sm tracking-[4px] font-bold text-[var(--lime)] hover:opacity-75 transition-opacity shrink-0"
+      >
+        LANG<span class="text-[var(--tx3)]">/</span>MATRIX
+      </a>
+
+      <div class="flex-1" />
+
+      <a
+        href="/"
+        class:list={[
+          "shrink-0 font-mono text-[10px] tracking-[2px] uppercase px-3 py-1.5 rounded transition-colors duration-200",
+          !isPlayground
+            ? "text-[var(--lime)] bg-[rgba(163,230,53,0.08)]"
+            : "text-[var(--tx3)] hover:text-[var(--tx)]",
+        ]}
+      >
+        Overview
+      </a>
+
+      <a
+        href="/playground"
+        class:list={[
+          "shrink-0 font-mono text-[10px] tracking-[2px] uppercase px-3 py-1.5 rounded transition-colors duration-200",
+          isPlayground
+            ? "text-[var(--lime)] bg-[rgba(163,230,53,0.08)]"
+            : "text-[var(--tx3)] hover:text-[var(--tx)]",
+        ]}
+      >
+        Playground
+      </a>
+    </nav>
+    <main class="pt-[56px]">
+      <slot />
+    </main>
+  </body>
+</html>
