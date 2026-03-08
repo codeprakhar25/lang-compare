@@ -1137,3 +1137,41 @@ export const metricLabels: Record<string, string> = {
   concurrency: "Concurrency",
   typeStrength: "Type Safety",
 };
+
+export const metricHelp: Record<string, { definition: string; whyItMatters: string; example: string }> = {
+  performance: {
+    definition: "How fast the language executes CPU-heavy work.",
+    whyItMatters: "Higher performance reduces infrastructure cost and improves throughput.",
+    example: "Critical for game engines, compilers, and low-latency services.",
+  },
+  memoryEfficiency: {
+    definition: "How much memory is needed for the same workload.",
+    whyItMatters: "Lower memory usage improves density and can reduce cloud costs.",
+    example: "Important for edge devices, embedded systems, and large concurrent workloads.",
+  },
+  learnability: {
+    definition: "How quickly a new developer can become productive.",
+    whyItMatters: "Faster onboarding means lower training cost and quicker delivery.",
+    example: "Useful for startups, classrooms, and teams hiring many junior developers.",
+  },
+  devSpeed: {
+    definition: "How quickly teams can design, build, and ship features.",
+    whyItMatters: "Higher development speed shortens release cycles and feedback loops.",
+    example: "Valuable for MVPs, internal tools, and frequent product iterations.",
+  },
+  ecosystem: {
+    definition: "Breadth and maturity of libraries, frameworks, and tooling.",
+    whyItMatters: "A stronger ecosystem lets teams reuse proven solutions instead of building from scratch.",
+    example: "Relevant for web backends, data platforms, and enterprise integrations.",
+  },
+  concurrency: {
+    definition: "Support for safe and scalable parallel or asynchronous work.",
+    whyItMatters: "Better concurrency can improve responsiveness under high load.",
+    example: "Important for chat services, API gateways, and data pipelines.",
+  },
+  typeStrength: {
+    definition: "How strongly the language enforces type correctness.",
+    whyItMatters: "Stronger type systems catch more bugs before runtime.",
+    example: "Useful in large codebases where refactors and API contracts are frequent.",
+  },
+};

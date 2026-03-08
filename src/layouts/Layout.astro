@@ -28,7 +28,7 @@ const isPlayground = currentPath.includes("playground");
     <nav class="site-nav">
       <a
         href="/"
-        class="font-mono text-sm tracking-[4px] font-bold text-[var(--lime)] hover:opacity-75 transition-opacity shrink-0"
+        class="font-mono text-base tracking-[4px] font-bold text-[var(--lime)] hover:opacity-75 transition-opacity shrink-0"
       >
         LANG<span class="text-[var(--tx3)]">/</span>MATRIX
       </a>
@@ -38,7 +38,7 @@ const isPlayground = currentPath.includes("playground");
       <a
         href="/"
         class:list={[
-          "shrink-0 font-mono text-[10px] tracking-[2px] uppercase px-3 py-1.5 rounded transition-colors duration-200",
+          "shrink-0 font-mono text-xs tracking-[2px] uppercase px-3 py-1.5 rounded transition-colors duration-200",
           !isPlayground
             ? "text-[var(--lime)] bg-[rgba(163,230,53,0.08)]"
             : "text-[var(--tx3)] hover:text-[var(--tx)]",
@@ -50,7 +50,7 @@ const isPlayground = currentPath.includes("playground");
       <a
         href="/playground"
         class:list={[
-          "shrink-0 font-mono text-[10px] tracking-[2px] uppercase px-3 py-1.5 rounded transition-colors duration-200",
+          "shrink-0 font-mono text-xs tracking-[2px] uppercase px-3 py-1.5 rounded transition-colors duration-200",
           isPlayground
             ? "text-[var(--lime)] bg-[rgba(163,230,53,0.08)]"
             : "text-[var(--tx3)] hover:text-[var(--tx)]",
@@ -62,5 +62,24 @@ const isPlayground = currentPath.includes("playground");
     <main class="pt-[56px]">
       <slot />
     </main>
+    <script>
+      const tipNodes = document.querySelectorAll<HTMLElement>("[data-tip]");
+      tipNodes.forEach((node) => {
+        if (!node.hasAttribute("tabindex")) node.setAttribute("tabindex", "0");
+        node.addEventListener("click", (event) => {
+          const isTouchMode = window.matchMedia("(hover: none)").matches;
+          if (!isTouchMode) return;
+          event.stopPropagation();
+          const open = node.dataset.tipOpen === "true";
+          node.dataset.tipOpen = open ? "false" : "true";
+        });
+      });
+
+      document.addEventListener("click", () => {
+        tipNodes.forEach((node) => {
+          node.dataset.tipOpen = "false";
+        });
+      });
+    </script>
   </body>
 </html>

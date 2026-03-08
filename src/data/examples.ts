@@ -679,3 +679,208 @@ void main() async {
     },
   ],
 };
+
+export interface ExampleGroup {
+  id: string;
+  title: string;
+  description: string;
+  expectedOutput: string;
+  snippets: Record<string, string>;
+}
+
+export const exampleGroups: ExampleGroup[] = [
+  {
+    id: "collection-filter",
+    title: "Filter Adult Names",
+    description: "Same task in each language: filter adults and print sorted names.",
+    expectedOutput: "Alice, Carol",
+    snippets: {
+      javascript: `const people = [
+  { name: "Alice", age: 30 },
+  { name: "Bob", age: 17 },
+  { name: "Carol", age: 25 },
+];
+
+const adults = people
+  .filter((person) => person.age >= 18)
+  .map((person) => person.name)
+  .sort();
+
+console.log(adults.join(", "));`,
+      typescript: `type Person = { name: string; age: number };
+
+const people: Person[] = [
+  { name: "Alice", age: 30 },
+  { name: "Bob", age: 17 },
+  { name: "Carol", age: 25 },
+];
+
+const adults = people
+  .filter((person) => person.age >= 18)
+  .map((person) => person.name)
+  .sort();
+
+console.log(adults.join(", "));`,
+      python: `people = [
+    {"name": "Alice", "age": 30},
+    {"name": "Bob", "age": 17},
+    {"name": "Carol", "age": 25},
+]
+
+adults = sorted([person["name"] for person in people if person["age"] >= 18])
+print(", ".join(adults))`,
+      go: `package main
+
+import (
+  "fmt"
+  "sort"
+)
+
+type Person struct {
+  Name string
+  Age  int
+}
+
+func main() {
+  people := []Person{
+    {Name: "Alice", Age: 30},
+    {Name: "Bob", Age: 17},
+    {Name: "Carol", Age: 25},
+  }
+
+  adults := []string{}
+  for _, person := range people {
+    if person.Age >= 18 {
+      adults = append(adults, person.Name)
+    }
+  }
+
+  sort.Strings(adults)
+  fmt.Println(adults)
+}`,
+      rust: `fn main() {
+    let people = vec![("Alice", 30), ("Bob", 17), ("Carol", 25)];
+    let mut adults: Vec<&str> = people
+        .iter()
+        .filter(|(_, age)| *age >= 18)
+        .map(|(name, _)| *name)
+        .collect();
+    adults.sort();
+    println!("{}", adults.join(", "));
+}`,
+      java: `import java.util.List;
+
+record Person(String name, int age) {}
+
+public class Main {
+    public static void main(String[] args) {
+        List<Person> people = List.of(
+            new Person("Alice", 30),
+            new Person("Bob", 17),
+            new Person("Carol", 25)
+        );
+
+        String output = people.stream()
+            .filter(person -> person.age() >= 18)
+            .map(Person::name)
+            .sorted()
+            .reduce((a, b) -> a + ", " + b)
+            .orElse("");
+
+        System.out.println(output);
+    }
+}`,
+      csharp: `using System;
+using System.Collections.Generic;
+using System.Linq;
+
+var people = new List<(string Name, int Age)> {
+    ("Alice", 30),
+    ("Bob", 17),
+    ("Carol", 25),
+};
+
+var adults = people
+    .Where(person => person.Age >= 18)
+    .Select(person => person.Name)
+    .OrderBy(name => name);
+
+Console.WriteLine(string.Join(", ", adults));`,
+    },
+  },
+  {
+    id: "error-safe-divide",
+    title: "Safe Divide",
+    description: "Handle divide-by-zero explicitly and print deterministic output.",
+    expectedOutput: "10 / 2 = 5; 10 / 0 = error",
+    snippets: {
+      javascript: `const safeDivide = (a, b) => (b === 0 ? "error" : a / b);
+console.log(\`10 / 2 = \${safeDivide(10, 2)}; 10 / 0 = \${safeDivide(10, 0)}\`);`,
+      typescript: `const safeDivide = (a: number, b: number): number | "error" =>
+  b === 0 ? "error" : a / b;
+
+console.log(\`10 / 2 = \${safeDivide(10, 2)}; 10 / 0 = \${safeDivide(10, 0)}\`);`,
+      python: `def safe_divide(a: float, b: float):
+    return "error" if b == 0 else a / b
+
+print(f"10 / 2 = {safe_divide(10, 2)}; 10 / 0 = {safe_divide(10, 0)}")`,
+      go: `package main
+
+import "fmt"
+
+func safeDivide(a, b float64) string {
+  if b == 0 {
+    return "error"
+  }
+  return fmt.Sprintf("%g", a/b)
+}
+
+func main() {
+  fmt.Printf("10 / 2 = %s; 10 / 0 = %s\\n", safeDivide(10, 2), safeDivide(10, 0))
+}`,
+      rust: `fn safe_divide(a: f64, b: f64) -> String {
+    if b == 0.0 {
+        "error".to_string()
+    } else {
+        format!("{}", a / b)
+    }
+}
+
+fn main() {
+    println!("10 / 2 = {}; 10 / 0 = {}", safe_divide(10.0, 2.0), safe_divide(10.0, 0.0));
+}`,
+      java: `public class Main {
+    static String safeDivide(double a, double b) {
+        return b == 0 ? "error" : String.valueOf(a / b);
+    }
+
+    public static void main(String[] args) {
+        System.out.printf("10 / 2 = %s; 10 / 0 = %s%n", safeDivide(10, 2), safeDivide(10, 0));
+    }
+}`,
+      csharp: `using System;
+
+string SafeDivide(double a, double b) => b == 0 ? "error" : (a / b).ToString();
+Console.WriteLine($"10 / 2 = {SafeDivide(10, 2)}; 10 / 0 = {SafeDivide(10, 0)}");`,
+    },
+  },
+];
+
+export interface RunnerMetadata {
+  runnable: boolean;
+  demoType: "real" | "pseudo";
+  note: string;
+}
+
+export const runnerMetadataByLang: Record<string, RunnerMetadata> = {
+  javascript: {
+    runnable: true,
+    demoType: "real",
+    note: "Runs in your browser sandbox with timing and console capture.",
+  },
+  typescript: {
+    runnable: true,
+    demoType: "real",
+    note: "Executed as JavaScript in-browser; type checking is illustrative in this UI.",
+  },
+};

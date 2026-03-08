@@ -4,12 +4,12 @@ import LanguageCard from "../components/LanguageCard.astro";
 import { languages, type Language } from "../data/languages";
 
 const categories: Array<{ id: Language["category"] | "all"; label: string }> = [
-  { id: "all",        label: "All" },
-  { id: "systems",    label: "Systems" },
-  { id: "web",        label: "Web" },
+  { id: "all", label: "All" },
+  { id: "systems", label: "Systems" },
+  { id: "web", label: "Web" },
   { id: "enterprise", label: "Enterprise" },
-  { id: "scripting",  label: "Scripting / AI" },
-  { id: "general",    label: "General" },
+  { id: "scripting", label: "Scripting / AI" },
+  { id: "general", label: "General" },
 ];
 
 function tablePillClass(v: number): string {
@@ -20,13 +20,13 @@ function tablePillClass(v: number): string {
 
 const jobTableClass: Record<Language["jobMarket"], string> = {
   "very-high": "text-green-400 bg-green-400/10",
-  high:        "text-blue-400 bg-blue-400/10",
-  medium:      "text-amber-400 bg-amber-400/10",
-  low:         "text-red-400 bg-red-400/10",
+  high: "text-blue-400 bg-blue-400/10",
+  medium: "text-amber-400 bg-amber-400/10",
+  low: "text-red-400 bg-red-400/10",
 };
 ---
 
-<Layout title="LangMatrix — Programming Language Comparison">
+<Layout title="LangMatrix - Programming Language Comparison">
   <section class="relative overflow-hidden border-b border-[var(--b1)] bg-[var(--s1)] px-8 sm:px-10 pt-16 pb-24 md:pt-20 md:pb-28">
     <div
       class="pointer-events-none absolute inset-0 opacity-[0.02]"
@@ -38,7 +38,7 @@ const jobTableClass: Record<Language["jobMarket"], string> = {
     />
 
     <div class="relative max-w-3xl mx-auto animate-fade-up">
-      <p class="font-mono text-[10px] uppercase tracking-[4px] text-[var(--lime)] mb-5">
+      <p class="font-mono text-[11px] uppercase tracking-[4px] text-[var(--lime)] mb-5">
         // dev reference 2025
       </p>
 
@@ -47,9 +47,9 @@ const jobTableClass: Record<Language["jobMarket"], string> = {
         <em class="not-italic text-[var(--lime)]">Honestly Ranked.</em>
       </h1>
 
-      <p class="font-mono text-sm text-[var(--tx3)] leading-relaxed max-w-lg mb-10">
-        Performance, memory, latency, ecosystem, concurrency — {languages.length} languages,
-        zero marketing speak. Hover any metric for the full story.
+      <p class="font-mono text-base text-[var(--tx3)] leading-relaxed max-w-xl mb-10">
+        Performance, memory, latency, ecosystem, and tradeoffs across {languages.length} languages.
+        Use tooltip hints on each card for practical meaning.
       </p>
       <div class="flex items-center gap-8 mb-10">
         {
@@ -57,7 +57,7 @@ const jobTableClass: Record<Language["jobMarket"], string> = {
             [
               [String(languages.length), "Languages"],
               ["6", "Metrics Each"],
-              ["∞", "Debates Ended"],
+              ["Infinite", "Debates Ended"],
             ] as [string, string][]
           ).map(([num, label], i) => (
             <div
@@ -65,7 +65,7 @@ const jobTableClass: Record<Language["jobMarket"], string> = {
               style={`animation-delay: ${200 + i * 80}ms`}
             >
               <span class="font-serif text-4xl text-[var(--lime)] leading-none">{num}</span>
-              <span class="font-mono text-[9px] uppercase tracking-[2px] text-[var(--tx3)]">
+              <span class="font-mono text-[11px] uppercase tracking-[2px] text-[var(--tx3)]">
                 {label}
               </span>
             </div>
@@ -77,23 +77,24 @@ const jobTableClass: Record<Language["jobMarket"], string> = {
         href="/playground"
         class="
           inline-flex items-center gap-2
-          font-mono text-[11px] uppercase tracking-[2px]
+          font-mono text-xs uppercase tracking-[2px]
           bg-[var(--lime)] text-black px-6 py-3
           hover:bg-white transition-colors duration-200
           animate-fade-up delay-400
         "
       >
-        ⚖ Open Playground
-        <span class="opacity-60">→</span>
+        Open Playground
+        <span class="opacity-60">-&gt;</span>
       </a>
     </div>
   </section>
+
   <div
     class="
       sticky top-[56px] z-10
       bg-[var(--bg)] border-b border-[var(--b2)]
       shadow-[0_4px_20px_rgba(0,0,0,0.25)]
-      px-6 py-3.5 flex items-center gap-3 flex-wrap
+      px-6 py-4 flex items-center gap-3 flex-wrap
     "
   >
     <div id="filter-group" class="flex gap-1.5 flex-wrap">
@@ -101,7 +102,7 @@ const jobTableClass: Record<Language["jobMarket"], string> = {
         categories.map((cat) => (
           <button
             class:list={[
-              "filter-pill font-mono text-[9px] uppercase tracking-[1.5px] px-3 py-1.5 rounded border transition-all duration-200 cursor-pointer",
+              "filter-pill font-mono text-[11px] uppercase tracking-[1.5px] px-3.5 py-2 rounded border transition-all duration-200 cursor-pointer",
               cat.id === "all"
                 ? "bg-[var(--lime)] text-black border-[var(--lime)]"
                 : "bg-transparent text-[var(--tx3)] border-[var(--b1)] hover:border-[var(--b2)] hover:text-[var(--tx)]",
@@ -115,21 +116,21 @@ const jobTableClass: Record<Language["jobMarket"], string> = {
     </div>
     <div class="w-px h-5 bg-[var(--b1)] hidden sm:block" aria-hidden="true" />
     <div class="flex items-center gap-1.5">
-      <span class="font-mono text-[8px] uppercase tracking-[1.5px] text-[var(--tx3)]">
+      <span class="font-mono text-[10px] uppercase tracking-[1.5px] text-[var(--tx3)]">
         Sort:
       </span>
       {
         (
           [
-            ["name",        "Name"],
+            ["name", "Name"],
             ["performance", "Perf"],
-            ["learnability","Learn"],
-            ["devSpeed",    "Dev Spd"],
-            ["ecosystem",   "Ecosystem"],
+            ["learnability", "Learn"],
+            ["devSpeed", "Dev Spd"],
+            ["ecosystem", "Ecosystem"],
           ] as [string, string][]
         ).map(([key, label]) => (
           <button
-            class="sort-btn font-mono text-[9px] uppercase tracking-[1px] px-2 py-1 rounded text-[var(--tx3)] hover:text-[var(--lime)] transition-colors cursor-pointer"
+            class="sort-btn font-mono text-[11px] uppercase tracking-[1px] px-2.5 py-1.5 rounded text-[var(--tx3)] hover:text-[var(--lime)] transition-colors cursor-pointer"
             data-sort={key}
           >
             {label}
@@ -137,23 +138,24 @@ const jobTableClass: Record<Language["jobMarket"], string> = {
         ))
       }
     </div>
-    <div class="ml-auto flex items-center gap-2 border border-[var(--b1)] rounded px-3 py-1.5 bg-[var(--s2)]">
-      <span class="font-mono text-[10px] text-[var(--lime)]">//</span>
+    <div class="ml-auto flex items-center gap-2 border border-[var(--b2)] rounded px-3 py-2 bg-[var(--s2)]">
+      <span class="font-mono text-xs text-[var(--lime)]">//</span>
       <input
         id="search-input"
         type="text"
         placeholder="filter..."
         autocomplete="off"
-        class="bg-transparent font-mono text-[11px] text-[var(--tx)] placeholder:text-[var(--tx3)] outline-hidden w-36"
+        class="bg-transparent font-mono text-xs text-[var(--tx)] placeholder:text-[var(--tx3)] outline-hidden w-44"
       />
     </div>
     <span
       id="result-count"
-      class="font-mono text-[9px] text-[var(--tx3)] tracking-[1px] hidden sm:block"
+      class="font-mono text-[11px] text-[var(--tx3)] tracking-[1px] hidden sm:block"
     >
       {languages.length} languages
     </span>
   </div>
+
   <div
     id="cards-grid"
     class="grid gap-4 p-4 sm:p-6 bg-[var(--s2)]"
@@ -161,16 +163,17 @@ const jobTableClass: Record<Language["jobMarket"], string> = {
   >
     {languages.map((lang, i) => <LanguageCard lang={lang} index={i} />)}
   </div>
+
   <section class="px-8 py-20 border-t border-[var(--b1)]">
     <div class="mb-10">
       <h2 class="font-serif text-5xl text-[var(--tx)] mb-2">Quick Matrix</h2>
-      <p class="font-mono text-[10px] uppercase tracking-[2px] text-[var(--tx3)]">
+      <p class="font-mono text-[11px] uppercase tracking-[2px] text-[var(--tx3)]">
         // all languages at a glance
       </p>
     </div>
 
     <div class="overflow-x-auto scrollbar-thin">
-      <table class="w-full border-collapse font-mono text-[11px]">
+      <table class="w-full border-collapse font-mono text-xs">
         <thead>
           <tr>
             {
@@ -187,7 +190,7 @@ const jobTableClass: Record<Language["jobMarket"], string> = {
                 "Salary",
                 "Paradigm",
               ].map((h) => (
-                <th class="sticky top-0 text-left px-4 py-3 bg-[var(--s2)] text-[9px] uppercase tracking-[2px] text-[var(--lime)] border-b border-[var(--b2)] whitespace-nowrap">
+                <th class="sticky top-0 text-left px-4 py-3 bg-[var(--s2)] text-[11px] uppercase tracking-[2px] text-[var(--lime)] border-b border-[var(--b2)] whitespace-nowrap">
                   {h}
                 </th>
               ))
@@ -197,14 +200,14 @@ const jobTableClass: Record<Language["jobMarket"], string> = {
         <tbody>
           {
             languages.map((lang) => (
-              <tr class="border-b border-[var(--b1)] hover:bg-[var(--s2)] transition-colors duration-150 group">
+              <tr class="border-b border-[var(--b1)] odd:bg-[var(--s1)] even:bg-[var(--s2)] hover:brightness-110 transition-colors duration-150 group">
                 <td class="px-4 py-3 whitespace-nowrap">
                   <div class="flex items-center gap-2">
                     <span class="text-base leading-none">{lang.icon}</span>
                     <span class="text-[var(--tx)] font-medium tracking-wide">
                       {lang.name}
                     </span>
-                    <span class="text-[var(--tx3)] text-[9px]">{lang.year}</span>
+                    <span class="text-[var(--tx3)] text-[11px]">{lang.year}</span>
                   </div>
                 </td>
                 {
@@ -222,7 +225,7 @@ const jobTableClass: Record<Language["jobMarket"], string> = {
                     <td class="px-4 py-3">
                       <span
                         class:list={[
-                          "inline-block px-2 py-0.5 rounded text-[9px]",
+                          "inline-block px-2.5 py-1 rounded text-[11px]",
                           tablePillClass(v),
                         ]}
                       >
@@ -234,7 +237,7 @@ const jobTableClass: Record<Language["jobMarket"], string> = {
                 <td class="px-4 py-3">
                   <span
                     class:list={[
-                      "inline-block px-2 py-0.5 rounded text-[9px]",
+                      "inline-block px-2.5 py-1 rounded text-[11px]",
                       jobTableClass[lang.jobMarket],
                     ]}
                   >
@@ -254,65 +257,65 @@ const jobTableClass: Record<Language["jobMarket"], string> = {
       </table>
     </div>
   </section>
+
   <section class="border-t border-[var(--b1)] px-10 py-24 flex flex-col items-center text-center gap-6">
-    <p class="font-mono text-[10px] uppercase tracking-[4px] text-[var(--lime)]">
+    <p class="font-mono text-[11px] uppercase tracking-[4px] text-[var(--lime)]">
       // side-by-side
     </p>
     <h2 class="font-serif text-5xl md:text-6xl text-[var(--tx)] leading-tight">
       Want to compare two<br /><em class="not-italic text-[var(--lime)]">head to head?</em>
     </h2>
-    <p class="font-mono text-sm text-[var(--tx3)] max-w-md leading-relaxed">
-      Drag any two languages into the playground — radar chart, metric bars, and
-      code examples side by side.
+    <p class="font-mono text-base text-[var(--tx3)] max-w-md leading-relaxed">
+      Drag any two languages into the playground for radar, metric insights,
+      scenario guidance, and code demos side by side.
     </p>
     <a
       href="/playground"
       class="
-        font-mono text-[11px] uppercase tracking-[2px]
+        font-mono text-xs uppercase tracking-[2px]
         bg-[var(--lime)] text-black px-8 py-4
         hover:bg-white transition-colors duration-200
       "
     >
-      Open Playground →
+      Open Playground -&gt;
     </a>
   </section>
 </Layout>
 
 <script>
-  const grid = document.getElementById("cards-grid")!;
-  const filterGrp = document.getElementById("filter-group")!;
-  const searchEl = document.getElementById("search-input") as HTMLInputElement;
-  const countEl = document.getElementById("result-count")!;
+  type CompareEntry = { id: string; name: string; icon: string };
+
+  const grid = document.getElementById("cards-grid");
+  const filterGrp = document.getElementById("filter-group");
+  const searchEl = document.getElementById("search-input") as HTMLInputElement | null;
+  const countEl = document.getElementById("result-count");
   let activeCat = "all";
   let activeSearch = "";
 
   function getCards(): HTMLElement[] {
-    return Array.from(grid.querySelectorAll<HTMLElement>("[data-id]"));
+    return Array.from(grid?.querySelectorAll<HTMLElement>("[data-id]") || []);
   }
 
   function applyFilters(): void {
     let count = 0;
     getCards().forEach((card) => {
-      const cat  = card.dataset.category ?? "";
-      const name = card.dataset.name ?? "";
-      const show =
-        (activeCat === "all" || cat === activeCat) &&
-        name.includes(activeSearch);
+      const cat = card.dataset.category || "";
+      const name = card.dataset.name || "";
+      const show = (activeCat === "all" || cat === activeCat) && name.includes(activeSearch);
       card.style.display = show ? "" : "none";
       if (show) count++;
     });
-    countEl.textContent = `${count} language${count !== 1 ? "s" : ""}`;
+    if (countEl) countEl.textContent = `${count} language${count !== 1 ? "s" : ""}`;
   }
 
-  filterGrp.addEventListener("click", (e) => {
+  filterGrp?.addEventListener("click", (e) => {
     const btn = (e.target as HTMLElement).closest<HTMLButtonElement>(".filter-pill");
     if (!btn) return;
 
-    activeCat = btn.dataset.cat ?? "all";
-    filterGrp.querySelectorAll(".filter-pill").forEach((b) => {
-      const el = b as HTMLButtonElement;
-      el.classList.remove("bg-[var(--lime)]", "text-black", "border-[var(--lime)]");
-      el.classList.add("bg-transparent", "text-[var(--tx3)]", "border-[var(--b1)]");
+    activeCat = btn.dataset.cat || "all";
+    filterGrp.querySelectorAll<HTMLButtonElement>(".filter-pill").forEach((b) => {
+      b.classList.remove("bg-[var(--lime)]", "text-black", "border-[var(--lime)]");
+      b.classList.add("bg-transparent", "text-[var(--tx3)]", "border-[var(--b1)]");
     });
     btn.classList.add("bg-[var(--lime)]", "text-black", "border-[var(--lime)]");
     btn.classList.remove("bg-transparent", "text-[var(--tx3)]", "border-[var(--b1)]");
@@ -320,7 +323,7 @@ const jobTableClass: Record<Language["jobMarket"], string> = {
     applyFilters();
   });
 
-  searchEl.addEventListener("input", () => {
+  searchEl?.addEventListener("input", () => {
     activeSearch = searchEl.value.toLowerCase().trim();
     applyFilters();
   });
@@ -328,28 +331,25 @@ const jobTableClass: Record<Language["jobMarket"], string> = {
   const sortBtns = document.querySelectorAll<HTMLButtonElement>(".sort-btn");
   sortBtns.forEach((btn) => {
     btn.addEventListener("click", () => {
-      sortBtns.forEach((b) =>
-        b.classList.remove("text-[var(--lime)]", "underline")
-      );
+      sortBtns.forEach((b) => b.classList.remove("text-[var(--lime)]"));
       btn.classList.add("text-[var(--lime)]");
 
-      const key = btn.dataset.sort ?? "name";
+      const key = btn.dataset.sort || "name";
       const cards = getCards();
 
       cards.sort((a, b) => {
-        const aId = a.dataset.id ?? "";
-        const bId = b.dataset.id ?? "";
+        const aId = a.dataset.id || "";
+        const bId = b.dataset.id || "";
         if (key === "name") return aId.localeCompare(bId);
-        const aVal = Number(a.dataset[key] ?? 0);
-        const bVal = Number(b.dataset[key] ?? 0);
+        const aVal = Number(a.dataset[key] || 0);
+        const bVal = Number(b.dataset[key] || 0);
         return bVal - aVal;
       });
 
-      cards.forEach((c) => grid.appendChild(c));
+      cards.forEach((c) => grid?.appendChild(c));
     });
   });
 
-  type CompareEntry = { id: string; name: string; icon: string };
   let selected: CompareEntry[] = [];
   try {
     const stored = sessionStorage.getItem("langCompare");
@@ -359,7 +359,7 @@ const jobTableClass: Record<Language["jobMarket"], string> = {
   function syncCompareBtns(): void {
     document.querySelectorAll<HTMLButtonElement>(".compare-btn").forEach((btn) => {
       const isSelected = selected.some((s) => s.id === btn.dataset.id);
-      btn.textContent = isSelected ? "✓ Selected" : "+ Compare";
+      btn.textContent = isSelected ? "Selected" : "+ Compare";
       if (isSelected) {
         btn.classList.add("bg-[var(--lime)]", "text-black", "border-[var(--lime)]");
         btn.classList.remove("text-[var(--tx3)]");
@@ -372,14 +372,14 @@ const jobTableClass: Record<Language["jobMarket"], string> = {
 
   syncCompareBtns();
 
-  grid.addEventListener("click", (e) => {
+  grid?.addEventListener("click", (e) => {
     const btn = (e.target as HTMLElement).closest<HTMLButtonElement>(".compare-btn");
     if (!btn) return;
 
     const entry: CompareEntry = {
-      id:   btn.dataset.id!,
-      name: btn.dataset.name!,
-      icon: btn.dataset.icon!,
+      id: btn.dataset.id ?? "",
+      name: btn.dataset.name ?? "",
+      icon: btn.dataset.icon ?? "",
     };
 
     const idx = selected.findIndex((s) => s.id === entry.id);
@@ -396,9 +396,7 @@ const jobTableClass: Record<Language["jobMarket"], string> = {
     syncCompareBtns();
 
     if (selected.length === 2) {
-      const go = confirm(
-        `Compare ${selected[0].name} vs ${selected[1].name}?\nOpen the playground?`
-      );
+      const go = confirm(`Compare ${selected[0].name} vs ${selected[1].name}?\nOpen the playground?`);
       if (go) window.location.href = "/playground";
     }
   });

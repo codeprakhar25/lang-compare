@@ -23,18 +23,18 @@ function barColor(v: number): string {
 }
 
 const catClass: Record<Language["category"], string> = {
-  systems:    "cat-systems",
-  web:        "cat-web",
+  systems: "cat-systems",
+  web: "cat-web",
   enterprise: "cat-enterprise",
-  scripting:  "cat-scripting",
-  general:    "cat-general",
+  scripting: "cat-scripting",
+  general: "cat-general",
 };
 
 const jobClass: Record<Language["jobMarket"], string> = {
   "very-high": "job-very-high",
-  high:        "job-high",
-  medium:      "job-medium",
-  low:         "job-low",
+  high: "job-high",
+  medium: "job-medium",
+  low: "job-low",
 };
 
 const delayMs = Math.min(index * 55, 600);
@@ -44,12 +44,12 @@ const metrics: Array<{
   value: number;
   tip: string;
 }> = [
-  { label: "Performance",   value: lang.performance,      tip: lang.tooltips.performance },
-  { label: "Memory",        value: lang.memoryEfficiency,  tip: lang.tooltips.memory },
-  { label: "Learnability",  value: lang.learnability,      tip: lang.tooltips.learnability },
-  { label: "Dev Speed",     value: lang.devSpeed,          tip: "" },
-  { label: "Ecosystem",     value: lang.ecosystem,         tip: lang.tooltips.ecosystem },
-  { label: "Concurrency",   value: lang.concurrency,       tip: lang.tooltips.concurrency },
+  { label: "Performance", value: lang.performance, tip: lang.tooltips.performance },
+  { label: "Memory", value: lang.memoryEfficiency, tip: lang.tooltips.memory },
+  { label: "Learnability", value: lang.learnability, tip: lang.tooltips.learnability },
+  { label: "Dev Speed", value: lang.devSpeed, tip: "" },
+  { label: "Ecosystem", value: lang.ecosystem, tip: lang.tooltips.ecosystem },
+  { label: "Concurrency", value: lang.concurrency, tip: lang.tooltips.concurrency },
 ];
 ---
 
@@ -86,15 +86,15 @@ const metrics: Array<{
         <h2 class="font-serif text-2xl text-[var(--tx)] leading-none tracking-tight">
           {lang.name}
         </h2>
-        <p class="font-mono text-[10px] text-[var(--tx3)] tracking-[1px] mt-1">
-          {lang.year} · {lang.creator.split("/")[0].trim()}
+        <p class="font-mono text-xs text-[var(--tx3)] tracking-[1px] mt-1">
+          {lang.year} - {lang.creator.split("/")[0].trim()}
         </p>
       </div>
     </div>
 
     <span
       class:list={[
-        "font-mono text-[9px] tracking-[1.5px] uppercase px-2 py-1 rounded border shrink-0 mt-0.5",
+        "font-mono text-[10px] tracking-[1.5px] uppercase px-2 py-1 rounded border shrink-0 mt-0.5",
         catClass[lang.category],
       ]}
     >
@@ -107,19 +107,21 @@ const metrics: Array<{
       metrics.map((m) => (
         <div
           class="flex flex-col gap-1"
-          data-tip={m.tip}
-          title={m.tip}
+          data-tip={m.tip ? "" : undefined}
+          data-tip-text={m.tip || undefined}
+          tabindex={m.tip ? "0" : undefined}
         >
           <div class="flex items-center justify-between">
-            <span class="font-mono text-[9px] uppercase tracking-[1.5px] text-[var(--tx3)]">
-              {m.label}
+            <span class="font-mono text-[11px] uppercase tracking-[1.5px] text-[var(--tx3)] inline-flex items-center gap-1.5">
+              <span>{m.label}</span>
+              {m.tip && <span class="tip-icon">?</span>}
             </span>
-            <span class:list={["font-mono text-[10px] font-medium", scoreClass(m.value)]}>
+            <span class:list={["font-mono text-xs font-medium", scoreClass(m.value)]}>
               {m.value}/10
             </span>
           </div>
 
-          <div class="h-[3px] w-full bg-[var(--s4)] rounded-full overflow-hidden">
+          <div class="h-1 w-full bg-[var(--s4)] rounded-full overflow-hidden">
             <div
               class="h-full rounded-full animate-bar-grow"
               style={`width: ${pct(m.value)}; background: ${barColor(m.value)}; animation-delay: ${delayMs + 200}ms`}
@@ -135,18 +137,21 @@ const metrics: Array<{
       (
         [
           ["Latency", lang.latency, lang.tooltips.latency],
-          ["GC",      lang.gcModel, ""],
-          ["Typing",  lang.typing,  ""],
+          ["GC", lang.gcModel, ""],
+          ["Typing", lang.typing, ""],
         ] as [string, string, string][]
       ).map(([label, val, tip]) => (
         <div
           class="flex gap-2 items-baseline"
-          data-tip={tip || undefined}
+          data-tip={tip ? "" : undefined}
+          data-tip-text={tip || undefined}
+          tabindex={tip ? "0" : undefined}
         >
-          <span class="font-mono text-[8px] uppercase tracking-[1px] text-[var(--tx3)] w-12 shrink-0">
-            {label}
+          <span class="font-mono text-[10px] uppercase tracking-[1px] text-[var(--tx3)] w-16 shrink-0 inline-flex items-center gap-1">
+            <span>{label}</span>
+            {tip && <span class="tip-icon">?</span>}
           </span>
-          <span class="font-mono text-[10px] text-[var(--tx2)] leading-snug">
+          <span class="font-mono text-[12px] text-[var(--tx2)] leading-snug">
             {val}
           </span>
         </div>
@@ -156,8 +161,8 @@ const metrics: Array<{
 
   <div class="px-6 grid grid-cols-2 gap-5">
     <div>
-      <p class="font-mono text-[8px] uppercase tracking-[2px] text-[var(--tx3)] mb-2.5">
-        ▲ strengths
+      <p class="font-mono text-[10px] uppercase tracking-[2px] text-[var(--tx3)] mb-2.5">
+        strengths
       </p>
       <ul class="flex flex-col gap-2">
         {
@@ -167,7 +172,7 @@ const metrics: Array<{
                 class="mt-[6px] size-[5px] rounded-full shrink-0 bg-[#22c55e]"
                 aria-hidden="true"
               />
-              <span class="font-mono text-[11px] text-[var(--tx2)] leading-relaxed">
+              <span class="font-mono text-[12px] text-[var(--tx2)] leading-relaxed">
                 {pro}
               </span>
             </li>
@@ -177,8 +182,8 @@ const metrics: Array<{
     </div>
 
     <div>
-      <p class="font-mono text-[8px] uppercase tracking-[2px] text-[var(--tx3)] mb-2.5">
-        ▼ weaknesses
+      <p class="font-mono text-[10px] uppercase tracking-[2px] text-[var(--tx3)] mb-2.5">
+        weaknesses
       </p>
       <ul class="flex flex-col gap-2">
         {
@@ -188,7 +193,7 @@ const metrics: Array<{
                 class="mt-[6px] size-[5px] rounded-full shrink-0 bg-[#ef4444]"
                 aria-hidden="true"
               />
-              <span class="font-mono text-[11px] text-[var(--tx2)] leading-relaxed">
+              <span class="font-mono text-[12px] text-[var(--tx2)] leading-relaxed">
                 {con}
               </span>
             </li>
@@ -199,13 +204,13 @@ const metrics: Array<{
   </div>
 
   <div class="px-6">
-    <p class="font-mono text-[8px] uppercase tracking-[2px] text-[var(--tx3)] mb-2">
+    <p class="font-mono text-[10px] uppercase tracking-[2px] text-[var(--tx3)] mb-2">
       // used for
     </p>
     <div class="flex flex-wrap gap-1.5">
       {
         lang.useCases.slice(0, 5).map((uc) => (
-          <span class="font-mono text-[9px] px-2 py-0.5 rounded bg-[rgba(163,230,53,0.06)] border border-[rgba(163,230,53,0.12)] text-[var(--lime-dim)] tracking-[0.3px]">
+          <span class="font-mono text-[10px] px-2 py-0.5 rounded bg-[rgba(163,230,53,0.06)] border border-[rgba(163,230,53,0.12)] text-[var(--lime-dim)] tracking-[0.3px]">
             {uc}
           </span>
         ))
@@ -213,7 +218,7 @@ const metrics: Array<{
     </div>
   </div>
 
-  <blockquote class="mx-6 border-l-2 border-[var(--b2)] pl-3 font-serif italic text-[11px] text-[var(--tx3)] leading-relaxed">
+  <blockquote class="mx-6 border-l-2 border-[var(--b2)] pl-3 font-serif italic text-sm text-[var(--tx3)] leading-relaxed">
     {lang.verdict}
   </blockquote>
 
@@ -225,12 +230,12 @@ const metrics: Array<{
     "
   >
     <div class="flex flex-col gap-0.5">
-      <span class="font-mono text-[8px] uppercase tracking-[1px] text-[var(--tx3)]">
+      <span class="font-mono text-[10px] uppercase tracking-[1px] text-[var(--tx3)]">
         Jobs
       </span>
       <span
         class:list={[
-          "font-mono text-[9px] px-2 py-0.5 rounded",
+          "font-mono text-[10px] px-2 py-0.5 rounded",
           jobClass[lang.jobMarket],
         ]}
       >
@@ -239,18 +244,18 @@ const metrics: Array<{
     </div>
 
     <div class="flex flex-col gap-0.5">
-      <span class="font-mono text-[8px] uppercase tracking-[1px] text-[var(--tx3)]">
+      <span class="font-mono text-[10px] uppercase tracking-[1px] text-[var(--tx3)]">
         Salary
       </span>
-      <span class="font-mono text-[10px] text-[var(--tx2)]">
+      <span class="font-mono text-xs text-[var(--tx2)]">
         {lang.salaryRange}
       </span>
     </div>
 
     <button
       class="
-        ml-auto font-mono text-[9px] uppercase tracking-[1.5px]
-        px-3 py-1.5 rounded border border-[var(--b2)]
+        ml-auto font-mono text-[10px] uppercase tracking-[1.5px]
+        px-3.5 py-2 rounded border border-[var(--b2)]
         text-[var(--tx3)] hover:text-black hover:bg-[var(--lime)] hover:border-[var(--lime)]
         transition-all duration-200 cursor-pointer
         compare-btn

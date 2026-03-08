@@ -3,41 +3,54 @@
 
 <div id="comparison-panel" class="hidden flex flex-col gap-0">
   <section class="border-b border-[var(--b1)]">
-    <h3 class="font-mono text-[9px] uppercase tracking-[3px] text-[var(--lime)] px-8 py-4 border-b border-[var(--b1)] bg-[var(--s1)]">
+    <h3 class="font-mono text-[11px] uppercase tracking-[3px] text-[var(--lime)] px-8 py-4 border-b border-[var(--b1)] bg-[var(--s1)]">
       // radar overview
     </h3>
     <div class="flex flex-wrap items-center justify-center gap-12 px-8 py-10 bg-[var(--s2)]">
-      <canvas id="radar-canvas" width="400" height="400" class="max-w-[360px] w-full h-auto" />
-      <div id="radar-legend" class="flex flex-col gap-4" />
+      <canvas id="radar-canvas" width="460" height="460" class="max-w-[420px] w-full h-auto" />
+      <div class="flex flex-col gap-4 max-w-sm">
+        <div id="radar-legend" class="flex flex-col gap-4" />
+        <p class="font-mono text-[11px] text-[var(--tx3)] leading-relaxed border border-[var(--b1)] rounded-md p-3 bg-[var(--s1)]">
+          How to read: farther from center means stronger score for that metric.
+        </p>
+      </div>
     </div>
   </section>
   <section class="border-b border-[var(--b1)]">
-    <h3 class="font-mono text-[9px] uppercase tracking-[3px] text-[var(--lime)] px-8 py-4 border-b border-[var(--b1)] bg-[var(--s1)]">
-      // metric breakdown
+    <h3 class="font-mono text-[11px] uppercase tracking-[3px] text-[var(--lime)] px-8 py-4 border-b border-[var(--b1)] bg-[var(--s1)]">
+      // quick comparison summary
     </h3>
-    <div id="bars-section" class="px-8 py-6 bg-[var(--s2)] flex flex-col gap-5" />
+    <div id="comparison-summary" class="px-8 py-6 bg-[var(--s2)]" />
   </section>
   <section class="border-b border-[var(--b1)]">
-    <h3 class="font-mono text-[9px] uppercase tracking-[3px] text-[var(--lime)] px-8 py-4 border-b border-[var(--b1)] bg-[var(--s1)]">
+    <h3 class="font-mono text-[11px] uppercase tracking-[3px] text-[var(--lime)] px-8 py-4 border-b border-[var(--b1)] bg-[var(--s1)]">
+      // metric breakdown
+    </h3>
+    <div id="bars-section" class="px-8 py-6 bg-[var(--s2)] flex flex-col gap-6" />
+    <div id="metric-insights" class="px-8 pb-7 bg-[var(--s2)] flex flex-col gap-2.5" />
+  </section>
+  <section class="border-b border-[var(--b1)]">
+    <h3 class="font-mono text-[11px] uppercase tracking-[3px] text-[var(--lime)] px-8 py-4 border-b border-[var(--b1)] bg-[var(--s1)]">
       // technical specs
     </h3>
     <div id="specs-section" class="overflow-x-auto scrollbar-thin" />
   </section>
   <section class="border-b border-[var(--b1)]">
-    <h3 class="font-mono text-[9px] uppercase tracking-[3px] text-[var(--lime)] px-8 py-4 border-b border-[var(--b1)] bg-[var(--s1)]">
+    <h3 class="font-mono text-[11px] uppercase tracking-[3px] text-[var(--lime)] px-8 py-4 border-b border-[var(--b1)] bg-[var(--s1)]">
       // when to choose each
     </h3>
     <div id="when-section" class="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-[var(--b1)]" />
   </section>
   <section>
-    <h3 class="font-mono text-[9px] uppercase tracking-[3px] text-[var(--lime)] px-8 py-4 border-b border-[var(--b1)] bg-[var(--s1)]">
+    <h3 class="font-mono text-[11px] uppercase tracking-[3px] text-[var(--lime)] px-8 py-4 border-b border-[var(--b1)] bg-[var(--s1)]">
       // code examples
     </h3>
+    <div id="code-task-controls" class="px-8 py-4 bg-[var(--s2)] border-b border-[var(--b1)]" />
     <div id="code-section" class="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-[var(--b1)] bg-[#0d1117]" />
   </section>
   <section>
-    <h3 class="font-mono text-[9px] uppercase tracking-[3px] text-[var(--lime)] px-8 py-4 border-b border-[var(--b1)] bg-[var(--s1)]">
-      // code runner
+    <h3 class="font-mono text-[11px] uppercase tracking-[3px] text-[var(--lime)] px-8 py-4 border-b border-[var(--b1)] bg-[var(--s1)]">
+      // code demo runner
     </h3>
     <div id="code-runner-section" class="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-[var(--b1)] bg-[#0d1117]" />
   </section>

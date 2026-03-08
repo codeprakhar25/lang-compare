@@ -2,47 +2,57 @@
 ---
 
 <div class="px-8 py-8 border-b border-[var(--b1)] bg-[var(--s1)]">
-  <div class="grid grid-cols-[1fr_auto_1fr] gap-4 items-center">
+  <div class="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-4 items-center">
     <div
       id="drop-a"
-      class="drop-zone border-2 border-dashed border-[var(--b2)] rounded-lg min-h-[88px] flex items-center justify-center transition-all duration-200"
+      class="drop-zone border-2 border-dashed border-[var(--b2)] rounded-lg min-h-[96px] flex items-center justify-center transition-all duration-200"
       data-slot="a"
     >
       <div id="placeholder-a" class="flex flex-col items-center gap-1.5 text-[var(--tx3)] text-center px-4 py-4">
-        <span class="font-mono text-2xl opacity-30">⊕</span>
-        <p class="font-mono text-[10px] tracking-[1px]">Drop Language A</p>
+        <span class="font-mono text-2xl opacity-30">+</span>
+        <p class="font-mono text-xs tracking-[1px]">Drop Language A</p>
       </div>
       <div id="filled-a" class="hidden w-full flex items-center justify-center gap-3 px-5 py-4">
         <span id="slot-a-icon" class="text-3xl leading-none" />
-        <span id="slot-a-name" class="font-mono text-base tracking-[1px] text-[var(--tx)]" />
+        <span id="slot-a-name" class="font-mono text-lg tracking-[1px] text-[var(--tx)]" />
         <button
-          class="slot-clear ml-auto font-mono text-[9px] text-[var(--tx3)] hover:text-[#ef4444] transition-colors border border-[var(--b1)] hover:border-[#ef4444] px-2 py-1 rounded"
+          class="slot-clear ml-auto font-mono text-[11px] text-[var(--tx3)] hover:text-[#ef4444] transition-colors border border-[var(--b1)] hover:border-[#ef4444] px-2.5 py-1.5 rounded"
           data-slot="a"
         >
-          ✕
+          Clear
         </button>
       </div>
     </div>
-    <div class="flex items-center justify-center">
-      <span class="font-mono text-sm font-bold tracking-[4px] text-[var(--lime)] opacity-60">VS</span>
+
+    <div class="flex flex-col items-center justify-center gap-2">
+      <span class="font-mono text-sm font-bold tracking-[4px] text-[var(--lime)] opacity-70">VS</span>
+      <div class="flex gap-2">
+        <button id="swap-slots" class="font-mono text-[11px] uppercase tracking-[1px] px-3 py-1.5 rounded border border-[var(--b2)] text-[var(--tx2)] hover:text-[var(--tx)] hover:border-[var(--lime)] transition-colors">
+          Swap
+        </button>
+        <button id="clear-all-slots" class="font-mono text-[11px] uppercase tracking-[1px] px-3 py-1.5 rounded border border-[var(--b2)] text-[var(--tx2)] hover:text-[#ef4444] hover:border-[#ef4444] transition-colors">
+          Clear All
+        </button>
+      </div>
     </div>
+
     <div
       id="drop-b"
-      class="drop-zone border-2 border-dashed border-[var(--b2)] rounded-lg min-h-[88px] flex items-center justify-center transition-all duration-200"
+      class="drop-zone border-2 border-dashed border-[var(--b2)] rounded-lg min-h-[96px] flex items-center justify-center transition-all duration-200"
       data-slot="b"
     >
       <div id="placeholder-b" class="flex flex-col items-center gap-1.5 text-[var(--tx3)] text-center px-4 py-4">
-        <span class="font-mono text-2xl opacity-30">⊕</span>
-        <p class="font-mono text-[10px] tracking-[1px]">Drop Language B</p>
+        <span class="font-mono text-2xl opacity-30">+</span>
+        <p class="font-mono text-xs tracking-[1px]">Drop Language B</p>
       </div>
       <div id="filled-b" class="hidden w-full flex items-center justify-center gap-3 px-5 py-4">
         <span id="slot-b-icon" class="text-3xl leading-none" />
-        <span id="slot-b-name" class="font-mono text-base tracking-[1px] text-[var(--tx)]" />
+        <span id="slot-b-name" class="font-mono text-lg tracking-[1px] text-[var(--tx)]" />
         <button
-          class="slot-clear ml-auto font-mono text-[9px] text-[var(--tx3)] hover:text-[#ef4444] transition-colors border border-[var(--b1)] hover:border-[#ef4444] px-2 py-1 rounded"
+          class="slot-clear ml-auto font-mono text-[11px] text-[var(--tx3)] hover:text-[#ef4444] transition-colors border border-[var(--b1)] hover:border-[#ef4444] px-2.5 py-1.5 rounded"
           data-slot="b"
         >
-          ✕
+          Clear
         </button>
       </div>
     </div>

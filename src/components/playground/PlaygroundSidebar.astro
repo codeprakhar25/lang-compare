@@ -9,28 +9,28 @@ const { languages, catClass } = Astro.props;
 ---
 
 <aside
-  class="w-[240px] shrink-0 border-r border-[var(--b1)] bg-[var(--s1)] flex flex-col sticky top-[52px] h-[calc(100vh-52px)] overflow-hidden"
+  class="w-[280px] shrink-0 border-r border-[var(--b1)] bg-[var(--s1)] flex flex-col sticky top-[52px] h-[calc(100vh-52px)] overflow-hidden"
 >
   <div class="px-4 pt-4 pb-3 border-b border-[var(--b1)]">
-    <p class="font-mono text-[9px] uppercase tracking-[3px] text-[var(--lime)] mb-3">
+    <p class="font-mono text-[11px] uppercase tracking-[3px] text-[var(--lime)] mb-3">
       // languages
     </p>
-    <div class="flex items-center gap-2 border border-[var(--b1)] rounded px-3 py-1.5 bg-[var(--s2)]">
-      <span class="font-mono text-[10px] text-[var(--tx3)]">›</span>
+    <div class="flex items-center gap-2 border border-[var(--b2)] rounded px-3 py-2 bg-[var(--s2)]">
+      <span class="font-mono text-xs text-[var(--tx3)]">search</span>
       <input
         id="sidebar-search"
         type="text"
-        placeholder="filter..."
+        placeholder="Filter languages..."
         autocomplete="off"
-        class="bg-transparent font-mono text-[10px] text-[var(--tx)] placeholder:text-[var(--tx3)] outline-hidden w-full"
+        class="bg-transparent font-mono text-xs text-[var(--tx)] placeholder:text-[var(--tx3)] outline-hidden w-full"
       />
     </div>
   </div>
-  <div id="lang-list" class="flex-1 overflow-y-auto scrollbar-thin p-2 flex flex-col gap-1">
+  <div id="lang-list" class="flex-1 overflow-y-auto scrollbar-thin p-2.5 flex flex-col gap-1.5">
     {
       languages.map((lang) => (
         <div
-          class="lang-chip group flex items-center gap-2.5 px-3 py-2 rounded bg-[var(--s2)] border border-transparent hover:border-[var(--b2)] hover:bg-[var(--s3)] cursor-grab active:cursor-grabbing transition-all duration-150 select-none"
+          class="lang-chip group flex items-center gap-2.5 px-3 py-2.5 rounded bg-[var(--s2)] border border-transparent hover:border-[var(--b2)] hover:bg-[var(--s3)] cursor-grab active:cursor-grabbing transition-all duration-150 select-none"
           draggable="true"
           data-id={lang.id}
           data-name={lang.name}
@@ -38,13 +38,13 @@ const { languages, catClass } = Astro.props;
           data-category={lang.category}
           title={`Click or drag ${lang.name}`}
         >
-          <span class="text-base leading-none shrink-0">{lang.icon}</span>
-          <span class="font-mono text-[10px] text-[var(--tx2)] flex-1 min-w-0 truncate tracking-wide">
+          <span class="text-lg leading-none shrink-0">{lang.icon}</span>
+          <span class="font-mono text-xs text-[var(--tx2)] flex-1 min-w-0 truncate tracking-wide">
             {lang.name}
           </span>
           <span
             class:list={[
-              "font-mono text-[7px] uppercase tracking-[1px] px-1.5 py-0.5 rounded border shrink-0",
+              "font-mono text-[9px] uppercase tracking-[1px] px-1.5 py-0.5 rounded border shrink-0",
               catClass[lang.category],
             ]}
           >
@@ -55,8 +55,8 @@ const { languages, catClass } = Astro.props;
     }
   </div>
   <div class="px-4 py-3 border-t border-[var(--b1)]">
-    <p class="font-mono text-[8px] text-[var(--tx3)] leading-relaxed">
-      Click to assign → or drag into a drop zone
+    <p class="font-mono text-[11px] text-[var(--tx3)] leading-relaxed">
+      Click to assign. Drag and drop also works.
     </p>
   </div>
 </aside>

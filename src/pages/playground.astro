@@ -5,8 +5,8 @@ import PlaygroundSidebar from "../components/playground/PlaygroundSidebar.astro"
 import PlaygroundDropZones from "../components/playground/PlaygroundDropZones.astro";
 import PlaygroundEmptyState from "../components/playground/PlaygroundEmptyState.astro";
 import PlaygroundComparisonPanel from "../components/playground/PlaygroundComparisonPanel.astro";
-import { languages, type Language } from "../data/languages";
-import { codeExamples } from "../data/examples";
+import { languages, metricHelp, type Language } from "../data/languages";
+import { codeExamples, exampleGroups, runnerMetadataByLang } from "../data/examples";
 
 const catClass: Record<Language["category"], string> = {
   systems: "cat-systems",
@@ -17,7 +17,7 @@ const catClass: Record<Language["category"], string> = {
 };
 ---
 
-<Layout title="Playground — LangMatrix">
+<Layout title="Playground - LangMatrix">
   <div class="flex flex-col min-h-[calc(100vh-52px)]">
     <PlaygroundHeader />
     <div class="flex flex-1 overflow-hidden">
@@ -31,12 +31,16 @@ const catClass: Record<Language["category"], string> = {
   </div>
 </Layout>
 
-<script define:vars={{ languagesData: languages, examplesData: codeExamples }}>
+<script define:vars={{ languagesData: languages, examplesData: codeExamples, groupsData: exampleGroups, runnerMetaData: runnerMetadataByLang, metricHelpData: metricHelp }}>
   const LANGS = languagesData;
   const EXAMPLES = examplesData;
+  const EXAMPLE_GROUPS = groupsData;
+  const RUNNER_META = runnerMetaData;
+  const METRIC_HELP = metricHelpData;
+
   const METRICS = [
     { key: "performance", label: "Performance" },
-    { key: "memoryEfficiency", label: "Memory Effic." },
+    { key: "memoryEfficiency", label: "Memory Efficiency" },
     { key: "learnability", label: "Learnability" },
     { key: "devSpeed", label: "Dev Speed" },
     { key: "ecosystem", label: "Ecosystem" },
@@ -46,6 +50,7 @@ const catClass: Record<Language["category"], string> = {
 
   let slotA = null;
   let slotB = null;
+  let currentTaskId = EXAMPLE_GROUPS[0]?.id || "";
 
   const langList = document.getElementById("lang-list");
   const sidebarSearch = document.getElementById("sidebar-search");
@@ -66,6 +71,7 @@ const catClass: Record<Language["category"], string> = {
     e.dataTransfer?.setData("langId", chip.dataset.id ?? "");
     chip.classList.add("opacity-50");
   });
+
   langList?.addEventListener("dragend", (e) => {
     const chip = e.target.closest(".lang-chip");
     chip?.classList.remove("opacity-50");
@@ -88,8 +94,29 @@ const catClass: Record<Language["category"], string> = {
       if (lang) assignSlot(slot, lang);
     });
   }
+
   setupDropZone("a");
   setupDropZone("b");
+
+  document.getElementById("swap-slots")?.addEventListener("click", () => {
+    if (!slotA || !slotB) return;
+    const temp = slotA;
+    slotA = slotB;
+    slotB = temp;
+    renderSlotUI("a", slotA);
+    renderSlotUI("b", slotB);
+    syncHighlightChips();
+    maybeRenderComparison();
+  });
+
+  document.getElementById("clear-all-slots")?.addEventListener("click", () => {
+    slotA = null;
+    slotB = null;
+    resetSlotUI("a");
+    resetSlotUI("b");
+    syncHighlightChips();
+    maybeRenderComparison();
+  });
 
   langList?.addEventListener("click", (e) => {
     const chip = e.target.closest(".lang-chip");
@@ -99,7 +126,7 @@ const catClass: Record<Language["category"], string> = {
     if (!slotA) assignSlot("a", lang);
     else if (!slotB && slotA.id !== lang.id) assignSlot("b", lang);
     else if (slotA.id === lang.id) assignSlot("a", lang);
-    else assignSlot("a", lang);
+    else assignSlot("b", lang);
   });
 
   document.querySelectorAll(".slot-clear").forEach((btn) => {
@@ -155,7 +182,7 @@ const catClass: Record<Language["category"], string> = {
     langList?.querySelectorAll(".lang-chip").forEach((chip) => {
       const isSelected = selectedIds.includes(chip.dataset.id ?? "");
       chip.classList.toggle("border-[var(--lime)]", isSelected);
-      chip.classList.toggle("bg-[rgba(163,230,53,0.06)]", isSelected);
+      chip.classList.toggle("bg-[rgba(163,230,53,0.1)]", isSelected);
     });
   }
 
@@ -172,9 +199,12 @@ const catClass: Record<Language["category"], string> = {
 
   function renderComparison(a, b) {
     drawRadar(a, b);
+    renderSummary(a, b);
     renderBars(a, b);
+    renderMetricInsights(a, b);
     renderSpecs(a, b);
     renderWhen(a, b);
+    renderTaskControls(a, b);
     renderCode(a, b);
     const runnerEl = document.getElementById("code-runner-section");
     if (runnerEl) renderCodeRunner(runnerEl, a, b);
@@ -184,13 +214,16 @@ const catClass: Record<Language["category"], string> = {
     const canvas = document.getElementById("radar-canvas");
     const ctx = canvas?.getContext("2d");
     if (!ctx) return;
+
     const W = canvas.width;
     const H = canvas.height;
     const cx = W / 2;
     const cy = H / 2;
-    const R = Math.min(W, H) / 2 - 52;
+    const R = Math.min(W, H) / 2 - 58;
     const N = METRICS.length;
+
     ctx.clearRect(0, 0, W, H);
+
     for (let ring = 1; ring <= 5; ring++) {
       ctx.beginPath();
       for (let j = 0; j < N; j++) {
@@ -201,18 +234,20 @@ const catClass: Record<Language["category"], string> = {
         j === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
       }
       ctx.closePath();
-      ctx.strokeStyle = "rgba(255,255,255,0.07)";
+      ctx.strokeStyle = "rgba(255,255,255,0.08)";
       ctx.lineWidth = 1;
       ctx.stroke();
     }
+
     for (let j = 0; j < N; j++) {
       const angle = (Math.PI * 2 * j) / N - Math.PI / 2;
       ctx.beginPath();
       ctx.moveTo(cx, cy);
       ctx.lineTo(cx + R * Math.cos(angle), cy + R * Math.sin(angle));
-      ctx.strokeStyle = "rgba(255,255,255,0.07)";
+      ctx.strokeStyle = "rgba(255,255,255,0.08)";
       ctx.stroke();
     }
+
     function drawPolygon(lang, color) {
       ctx.beginPath();
       METRICS.forEach((m, j) => {
@@ -223,11 +258,12 @@ const catClass: Record<Language["category"], string> = {
         j === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
       });
       ctx.closePath();
-      ctx.fillStyle = color + "28";
+      ctx.fillStyle = color + "25";
       ctx.fill();
       ctx.strokeStyle = color;
       ctx.lineWidth = 2;
       ctx.stroke();
+
       METRICS.forEach((m, j) => {
         const angle = (Math.PI * 2 * j) / N - Math.PI / 2;
         const val = lang[m.key] / 10;
@@ -239,63 +275,112 @@ const catClass: Record<Language["category"], string> = {
         ctx.fill();
       });
     }
+
     drawPolygon(a, a.color);
     drawPolygon(b, b.color);
-    ctx.font = "10px 'JetBrains Mono', monospace";
+
+    ctx.font = "12px 'JetBrains Mono', monospace";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
+
     METRICS.forEach((m, j) => {
       const angle = (Math.PI * 2 * j) / N - Math.PI / 2;
-      const labelR = R + 28;
+      const labelR = R + 32;
       const x = cx + labelR * Math.cos(angle);
       const y = cy + labelR * Math.sin(angle);
-      ctx.fillStyle = "rgba(160,160,176,0.7)";
+      ctx.fillStyle = "rgba(188,188,201,0.85)";
       ctx.fillText(m.label, x, y);
     });
+
     const legend = document.getElementById("radar-legend");
     if (legend) {
-      legend.innerHTML = [a, b].map((lang) => `
-        <div class="flex items-center gap-3">
-          <span style="width:12px;height:12px;border-radius:50%;background:${lang.color};flex-shrink:0;display:inline-block"></span>
-          <span style="font-size:20px;line-height:1">${lang.icon}</span>
-          <span style="font-family:var(--font-mono);font-size:12px;color:${lang.color}">${lang.name}</span>
-        </div>
-      `).join("");
+      legend.innerHTML = [a, b]
+        .map(
+          (lang) => `
+          <div class="flex items-center gap-3 border border-[var(--b1)] rounded-md px-3 py-2 bg-[var(--s1)]">
+            <span style="width:12px;height:12px;border-radius:50%;background:${lang.color};flex-shrink:0;display:inline-block"></span>
+            <span style="font-size:20px;line-height:1">${lang.icon}</span>
+            <span style="font-family:var(--font-mono);font-size:13px;color:${lang.color}">${lang.name}</span>
+          </div>
+        `,
+        )
+        .join("");
     }
+  }
+
+  function renderSummary(a, b) {
+    const el = document.getElementById("comparison-summary");
+    if (!el) return;
+
+    let aWins = 0;
+    let bWins = 0;
+    METRICS.forEach((m) => {
+      if (a[m.key] > b[m.key]) aWins++;
+      else if (b[m.key] > a[m.key]) bWins++;
+    });
+
+    const leader = aWins === bWins ? "Balanced match" : aWins > bWins ? `${a.icon} ${a.name}` : `${b.icon} ${b.name}`;
+    const tradeoff = a.learnability >= b.learnability && b.performance > a.performance
+      ? `${a.name} is easier to onboard, while ${b.name} offers stronger raw execution.`
+      : b.learnability >= a.learnability && a.performance > b.performance
+        ? `${b.name} is easier to onboard, while ${a.name} offers stronger raw execution.`
+        : `The biggest decision is team fit versus workload profile.`;
+
+    el.innerHTML = `
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div class="border border-[var(--b1)] rounded-md p-4 bg-[var(--s1)]">
+          <p class="font-mono text-[11px] uppercase tracking-[1.5px] text-[var(--tx3)] mb-1">Current Leader</p>
+          <p class="font-mono text-base text-[var(--tx)]">${leader}</p>
+        </div>
+        <div class="border border-[var(--b1)] rounded-md p-4 bg-[var(--s1)]">
+          <p class="font-mono text-[11px] uppercase tracking-[1.5px] text-[var(--tx3)] mb-1">Metrics Won</p>
+          <p class="font-mono text-base text-[var(--tx)]">${a.name}: ${aWins} | ${b.name}: ${bWins}</p>
+        </div>
+        <div class="border border-[var(--b1)] rounded-md p-4 bg-[var(--s1)]">
+          <p class="font-mono text-[11px] uppercase tracking-[1.5px] text-[var(--tx3)] mb-1">Tradeoff Warning</p>
+          <p class="font-mono text-[12px] text-[var(--tx2)] leading-relaxed">${tradeoff}</p>
+        </div>
+      </div>
+    `;
   }
 
   function renderBars(a, b) {
     const el = document.getElementById("bars-section");
     if (!el) return;
+
     el.innerHTML = METRICS.map((m) => {
       const av = a[m.key];
       const bv = b[m.key];
       const winner = av > bv ? "a" : bv > av ? "b" : "tie";
-      const winnerBadge = winner === "tie"
-        ? `<span style="font-family:var(--font-mono);font-size:8px;padding:2px 8px;border-radius:20px;background:rgba(255,255,255,0.06);color:var(--tx3);letter-spacing:1px">TIE</span>`
-        : `<span style="font-family:var(--font-mono);font-size:8px;padding:2px 8px;border-radius:20px;background:${winner === "a" ? a.color : b.color};color:#000;letter-spacing:1px">${winner === "a" ? a.icon : b.icon} WIN</span>`;
+      const winnerBadge =
+        winner === "tie"
+          ? `<span style="font-family:var(--font-mono);font-size:10px;padding:3px 9px;border-radius:20px;background:rgba(255,255,255,0.08);color:var(--tx3);letter-spacing:1px">TIE</span>`
+          : `<span style="font-family:var(--font-mono);font-size:10px;padding:3px 9px;border-radius:20px;background:${winner === "a" ? a.color : b.color};color:#000;letter-spacing:1px">${winner === "a" ? a.icon : b.icon} WIN</span>`;
+
       return `
-        <div style="display:grid;grid-template-columns:1fr 110px 1fr;gap:12px;align-items:center">
-          <div style="display:flex;flex-direction:column;gap:5px">
+        <div style="display:grid;grid-template-columns:1fr 130px 1fr;gap:14px;align-items:center">
+          <div style="display:flex;flex-direction:column;gap:6px">
             <div style="display:flex;justify-content:space-between;align-items:center">
-              <span style="font-family:var(--font-mono);font-size:10px;color:${a.color}">${a.icon} ${a.name}</span>
-              <span style="font-family:var(--font-mono);font-size:10px;font-weight:500;color:var(--tx)">${av}/10</span>
+              <span style="font-family:var(--font-mono);font-size:12px;color:${a.color}">${a.icon} ${a.name}</span>
+              <span style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--tx)">${av}/10</span>
             </div>
-            <div style="height:5px;background:var(--s4);border-radius:3px;overflow:hidden;display:flex;justify-content:flex-end">
-              <div style="width:${av * 10}%;height:100%;background:${a.color};border-radius:3px;animation:barGrow 0.8s cubic-bezier(0.22,1,0.36,1) both;transform-origin:right center"></div>
+            <div style="height:8px;background:var(--s4);border-radius:999px;overflow:hidden;display:flex;justify-content:flex-end">
+              <div style="width:${av * 10}%;height:100%;background:${a.color};border-radius:999px;animation:barGrow 0.8s cubic-bezier(0.22,1,0.36,1) both;transform-origin:right center"></div>
             </div>
           </div>
-          <div style="text-align:center;display:flex;flex-direction:column;gap:5px;align-items:center">
-            <span style="font-family:var(--font-mono);font-size:8px;text-transform:uppercase;letter-spacing:1.5px;color:var(--tx3)">${m.label}</span>
+
+          <div style="text-align:center;display:flex;flex-direction:column;gap:7px;align-items:center">
+            <span style="font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--tx3)">${m.label}</span>
             ${winnerBadge}
           </div>
-          <div style="display:flex;flex-direction:column;gap:5px">
+
+          <div style="display:flex;flex-direction:column;gap:6px">
             <div style="display:flex;justify-content:space-between;align-items:center">
-              <span style="font-family:var(--font-mono);font-size:10px;font-weight:500;color:var(--tx)">${bv}/10</span>
-              <span style="font-family:var(--font-mono);font-size:10px;color:${b.color}">${b.icon} ${b.name}</span>
+              <span style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--tx)">${bv}/10</span>
+              <span style="font-family:var(--font-mono);font-size:12px;color:${b.color}">${b.icon} ${b.name}</span>
             </div>
-            <div style="height:5px;background:var(--s4);border-radius:3px;overflow:hidden">
-              <div style="width:${bv * 10}%;height:100%;background:${b.color};border-radius:3px;animation:barGrow 0.8s cubic-bezier(0.22,1,0.36,1) both;transform-origin:left center"></div>
+            <div style="height:8px;background:var(--s4);border-radius:999px;overflow:hidden">
+              <div style="width:${bv * 10}%;height:100%;background:${b.color};border-radius:999px;animation:barGrow 0.8s cubic-bezier(0.22,1,0.36,1) both;transform-origin:left center"></div>
             </div>
           </div>
         </div>
@@ -303,9 +388,30 @@ const catClass: Record<Language["category"], string> = {
     }).join("");
   }
 
+  function renderMetricInsights(a, b) {
+    const el = document.getElementById("metric-insights");
+    if (!el) return;
+
+    const lines = METRICS.map((m) => {
+      const av = a[m.key];
+      const bv = b[m.key];
+      const diff = Math.abs(av - bv);
+      const helper = METRIC_HELP[m.key];
+      if (av === bv) {
+        return `<p class="font-mono text-[12px] text-[var(--tx2)]">${m.label}: tie at ${av}/10. ${helper?.whyItMatters || ""}</p>`;
+      }
+      const winner = av > bv ? a : b;
+      const loser = av > bv ? b : a;
+      return `<p class="font-mono text-[12px] text-[var(--tx2)]"><span style="color:${winner.color}">${winner.name}</span> leads ${m.label} by ${diff} point${diff === 1 ? "" : "s"} vs ${loser.name}. ${helper?.example || ""}</p>`;
+    });
+
+    el.innerHTML = lines.join("");
+  }
+
   function renderSpecs(a, b) {
     const el = document.getElementById("specs-section");
     if (!el) return;
+
     const rows = [
       ["Performance", a.performanceLabel, b.performanceLabel],
       ["Memory", a.memoryLabel, b.memoryLabel],
@@ -318,23 +424,28 @@ const catClass: Record<Language["category"], string> = {
       ["Born", String(a.year), String(b.year)],
       ["Creator", a.creator, b.creator],
     ];
+
     el.innerHTML = `
-      <table style="width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:11px">
+      <table style="width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:12px">
         <thead>
           <tr>
-            <th style="text-align:left;padding:10px 32px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--tx3);border-bottom:1px solid var(--b2);background:var(--s2)">Spec</th>
-            <th style="text-align:left;padding:10px 20px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:${a.color};border-bottom:1px solid var(--b2);background:var(--s2)">${a.icon} ${a.name}</th>
-            <th style="text-align:left;padding:10px 20px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:${b.color};border-bottom:1px solid var(--b2);background:var(--s2)">${b.icon} ${b.name}</th>
+            <th style="text-align:left;padding:12px 26px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--tx3);border-bottom:1px solid var(--b2);background:var(--s2)">Spec</th>
+            <th style="text-align:left;padding:12px 20px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:${a.color};border-bottom:1px solid var(--b2);background:var(--s2)">${a.icon} ${a.name}</th>
+            <th style="text-align:left;padding:12px 20px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:${b.color};border-bottom:1px solid var(--b2);background:var(--s2)">${b.icon} ${b.name}</th>
           </tr>
         </thead>
         <tbody>
-          ${rows.map(([label, av, bv], i) => `
+          ${rows
+            .map(
+              ([label, av, bv], i) => `
             <tr style="border-bottom:1px solid var(--b1);${i % 2 === 0 ? "" : "background:var(--s2)"}">
-              <td style="padding:10px 32px;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--tx3)">${label}</td>
-              <td style="padding:10px 20px;color:var(--tx2)">${av}</td>
-              <td style="padding:10px 20px;color:var(--tx2)">${bv}</td>
+              <td style="padding:11px 26px;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--tx3)">${label}</td>
+              <td style="padding:11px 20px;color:var(--tx2)">${av}</td>
+              <td style="padding:11px 20px;color:var(--tx2)">${bv}</td>
             </tr>
-          `).join("")}
+          `,
+            )
+            .join("")}
         </tbody>
       </table>
     `;
@@ -343,122 +454,258 @@ const catClass: Record<Language["category"], string> = {
   function renderWhen(a, b) {
     const el = document.getElementById("when-section");
     if (!el) return;
+
     function bestFor(lang, other) {
       const wins = [];
-      if (lang.performance > other.performance) wins.push("Performance-critical and low-level applications");
-      if (lang.memoryEfficiency > other.memoryEfficiency) wins.push("Memory-constrained environments");
-      if (lang.learnability > other.learnability) wins.push("Teams new to the language or beginners");
-      if (lang.devSpeed > other.devSpeed) wins.push("Rapid prototyping and high developer velocity");
-      if (lang.ecosystem > other.ecosystem) wins.push("Rich third-party library needs");
-      if (lang.concurrency > other.concurrency) wins.push("Highly concurrent or parallel workloads");
-      if (lang.typeStrength > other.typeStrength) wins.push("Large codebases that need compile-time safety");
-      return wins.length ? wins : ["Specific niche use-cases — see use cases above"];
+      if (lang.performance > other.performance) wins.push("Best for performance-sensitive services and compute-heavy tasks.");
+      if (lang.memoryEfficiency > other.memoryEfficiency) wins.push("Better in constrained memory or cost-sensitive infrastructure.");
+      if (lang.learnability > other.learnability) wins.push("Onboards new developers faster with lower training overhead.");
+      if (lang.devSpeed > other.devSpeed) wins.push("Ships features faster for MVPs and iteration-heavy teams.");
+      if (lang.ecosystem > other.ecosystem) wins.push("Has richer libraries and framework coverage for product breadth.");
+      if (lang.concurrency > other.concurrency) wins.push("Handles concurrent workloads with stronger scaling patterns.");
+      if (lang.typeStrength > other.typeStrength) wins.push("Provides stronger compile-time guarantees in large systems.");
+      return wins.slice(0, 4).length ? wins.slice(0, 4) : ["Use this when team expertise and existing stack alignment are stronger."];
     }
+
     function panel(lang, other) {
       const items = bestFor(lang, other);
       return `
-        <div style="padding:28px 32px;display:flex;flex-direction:column;gap:16px;border-top:3px solid ${lang.color}">
+        <div style="padding:26px 28px;display:flex;flex-direction:column;gap:15px;border-top:3px solid ${lang.color}">
           <div style="display:flex;align-items:center;gap:10px">
             <span style="font-size:28px;line-height:1">${lang.icon}</span>
-            <span style="font-family:var(--font-mono);font-size:16px;letter-spacing:2px;color:${lang.color}">${lang.name}</span>
+            <span style="font-family:var(--font-mono);font-size:16px;letter-spacing:1.5px;color:${lang.color}">${lang.name}</span>
           </div>
-          <p style="font-family:var(--font-mono);font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--tx3)">Choose ${lang.name} when:</p>
+          <p style="font-family:var(--font-mono);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--tx3)">Choose ${lang.name} when:</p>
           <ul style="list-style:none;display:flex;flex-direction:column;gap:8px">
-            ${items.map((item) => `
+            ${items
+              .map(
+                (item) => `
               <li style="display:flex;align-items:flex-start;gap:8px">
-                <span style="width:5px;height:5px;border-radius:50%;background:${lang.color};flex-shrink:0;margin-top:6px"></span>
-                <span style="font-family:var(--font-mono);font-size:11px;color:var(--tx2);line-height:1.5">${item}</span>
+                <span style="width:6px;height:6px;border-radius:50%;background:${lang.color};flex-shrink:0;margin-top:7px"></span>
+                <span style="font-family:var(--font-mono);font-size:12px;color:var(--tx2);line-height:1.55">${item}</span>
               </li>
-            `).join("")}
+            `,
+              )
+              .join("")}
           </ul>
-          <blockquote style="border-left:2px solid var(--b2);padding-left:12px;font-size:11px;font-style:italic;color:var(--tx3);line-height:1.7">${lang.verdict}</blockquote>
+          <blockquote style="border-left:2px solid var(--b2);padding-left:12px;font-size:12px;font-style:italic;color:var(--tx3);line-height:1.6">${lang.verdict}</blockquote>
         </div>
       `;
     }
+
     el.innerHTML = panel(a, b) + panel(b, a);
+  }
+
+  function escapeHtml(text) {
+    return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  function getLineNumberedCode(code) {
+    const lines = code.split("\n");
+    return lines
+      .map((line, idx) => {
+        return `<tr><td style="width:52px;padding:0 14px;color:#6e7681;text-align:right;vertical-align:top;border-right:1px solid #1f2937;font-family:var(--font-mono);font-size:12px;">${idx + 1}</td><td style="padding:0 14px;color:#c9d1d9;font-family:var(--font-mono);font-size:12px;white-space:pre;">${escapeHtml(line) || " "}</td></tr>`;
+      })
+      .join("");
+  }
+
+  function getCurrentTaskFor(langA, langB) {
+    const selectedGroup = EXAMPLE_GROUPS.find((g) => g.id === currentTaskId) || EXAMPLE_GROUPS[0] || null;
+    if (!selectedGroup) return null;
+
+    const hasA = Boolean(selectedGroup.snippets[langA.id]);
+    const hasB = Boolean(selectedGroup.snippets[langB.id]);
+
+    return {
+      group: selectedGroup,
+      hasA,
+      hasB,
+      description: selectedGroup.description,
+      expectedOutput: selectedGroup.expectedOutput,
+    };
+  }
+
+  function getSnippet(lang, group) {
+    if (!group) {
+      return EXAMPLES[lang.id]?.[0]?.code ?? "// No example available yet";
+    }
+    return group.snippets[lang.id] ?? EXAMPLES[lang.id]?.[0]?.code ?? "// No example available yet";
+  }
+
+  function getSnippetTitle(lang, group) {
+    if (group?.snippets[lang.id]) return group.title;
+    return EXAMPLES[lang.id]?.[0]?.title ?? "Single language fallback example";
+  }
+
+  function renderTaskControls(a, b) {
+    const el = document.getElementById("code-task-controls");
+    if (!el) return;
+
+    const buttons = EXAMPLE_GROUPS.map((group) => {
+      const availableBoth = Boolean(group.snippets[a.id] && group.snippets[b.id]);
+      const selected = currentTaskId === group.id;
+      return `
+        <button class="task-btn font-mono text-[11px] px-3 py-1.5 rounded border transition-colors ${selected ? "bg-[var(--lime)] text-black border-[var(--lime)]" : "border-[var(--b2)] text-[var(--tx2)] hover:text-[var(--tx)]"}" data-task-id="${group.id}" ${availableBoth ? "" : "title=\"Fallback on one side\""}>
+          ${group.title}${availableBoth ? "" : " *"}
+        </button>
+      `;
+    }).join("");
+
+    const active = EXAMPLE_GROUPS.find((g) => g.id === currentTaskId);
+
+    el.innerHTML = `
+      <div class="flex flex-wrap items-center gap-2 mb-3">${buttons}</div>
+      <p class="font-mono text-[11px] text-[var(--tx3)]">${active?.description || ""}</p>
+    `;
+
+    el.querySelectorAll(".task-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        currentTaskId = btn.dataset.taskId;
+        renderTaskControls(a, b);
+        renderCode(a, b);
+        const runnerEl = document.getElementById("code-runner-section");
+        if (runnerEl) renderCodeRunner(runnerEl, a, b);
+      });
+    });
   }
 
   function renderCode(a, b) {
     const el = document.getElementById("code-section");
     if (!el) return;
+
+    const task = getCurrentTaskFor(a, b);
+
     function codePanel(lang) {
-      const ex = EXAMPLES[lang.id]?.[0] ?? null;
-      const escapedCode = ex ? ex.code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") : "// No example available yet";
+      const code = getSnippet(lang, task?.group);
+      const title = getSnippetTitle(lang, task?.group);
+      const subtitle = task?.group?.snippets[lang.id] ? task.group.description : "Fallback snippet: no group-specific version available for this language.";
+
       return `
         <div style="display:flex;flex-direction:column;border-top:3px solid ${lang.color}">
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid var(--b1);background:var(--s1)">
-            <span style="font-family:var(--font-mono);font-size:11px;color:${lang.color};letter-spacing:1px">${lang.icon} ${lang.name}</span>
-            <span style="font-family:var(--font-mono);font-size:9px;color:var(--tx3);letter-spacing:0.5px">${ex?.title ?? ""}</span>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid #1f2937;background:#111827">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="width:10px;height:10px;border-radius:999px;background:#ef4444"></span>
+              <span style="width:10px;height:10px;border-radius:999px;background:#f59e0b"></span>
+              <span style="width:10px;height:10px;border-radius:999px;background:#22c55e"></span>
+              <span style="font-family:var(--font-mono);font-size:12px;color:${lang.color};margin-left:8px">${lang.icon} ${lang.name}</span>
+            </div>
+            <span style="font-family:var(--font-mono);font-size:11px;color:#94a3b8">${title}</span>
           </div>
-          ${ex ? `<p style="font-family:var(--font-mono);font-size:10px;color:var(--tx3);padding:10px 20px;border-bottom:1px solid var(--b1);font-style:italic;line-height:1.5">${ex.description}</p>` : ""}
-          <pre style="margin:0;padding:20px;font-family:var(--font-mono);font-size:11.5px;line-height:1.75;color:#c9d1d9;overflow-x:auto;white-space:pre;tab-size:2;flex:1;background:#0d1117"><code>${escapedCode}</code></pre>
+          <div style="padding:9px 16px;border-bottom:1px solid #1f2937;background:#0f172a;font-family:var(--font-mono);font-size:11px;color:#94a3b8;line-height:1.5">${subtitle}</div>
+          <div style="overflow:auto;background:#0b1220;max-height:420px">
+            <table style="border-collapse:collapse;width:100%;min-width:560px">
+              <tbody>${getLineNumberedCode(code)}</tbody>
+            </table>
+          </div>
         </div>
       `;
     }
+
     el.innerHTML = codePanel(a) + codePanel(b);
   }
 
+  function runJsCode(code) {
+    const logs = [];
+    const origLog = console.log;
+    const origError = console.error;
+    console.log = (...args) => {
+      logs.push({ type: "log", text: args.map((x) => (typeof x === "object" ? JSON.stringify(x) : String(x))).join(" ") });
+    };
+    console.error = (...args) => {
+      logs.push({ type: "error", text: args.map(String).join(" ") });
+    };
+
+    const t0 = performance.now();
+    let memBefore;
+    let memAfter;
+
+    if (typeof performance !== "undefined" && performance.memory) {
+      memBefore = performance.memory.usedJSHeapSize;
+    }
+
+    try {
+      new Function(code)();
+    } catch (err) {
+      logs.push({ type: "error", text: err.message || String(err) });
+    }
+
+    const t1 = performance.now();
+
+    if (typeof performance !== "undefined" && performance.memory) {
+      memAfter = performance.memory.usedJSHeapSize;
+    }
+
+    console.log = origLog;
+    console.error = origError;
+
+    const timeMs = (t1 - t0).toFixed(2);
+    const memStr =
+      memBefore != null && memAfter != null
+        ? `${((memAfter - memBefore) / 1048576).toFixed(2)} MB delta (heap)`
+        : "N/A (Chrome only)";
+    const consoleText = logs.length
+      ? logs.map((l) => (l.type === "error" ? `Error: ${l.text}` : l.text)).join("\n")
+      : "(no output)";
+
+    return `Execution: Real browser run\nTime: ${timeMs} ms\nMemory: ${memStr}\n\nConsole:\n${consoleText}`;
+  }
+
   function renderCodeRunner(container, a, b) {
-    const runnable = (id) => id === "javascript" || id === "typescript";
+    const task = getCurrentTaskFor(a, b);
+
     function runnerPanel(lang, slot) {
-      const canRun = runnable(lang.id);
+      const meta = RUNNER_META[lang.id] || {
+        runnable: false,
+        demoType: "pseudo",
+        note: "This language is shown as a simulated output demo in the browser UI.",
+      };
+      const code = getSnippet(lang, task?.group);
+      const btnLabel = meta.runnable ? "Run Code" : "Show Demo Output";
+
       return `
         <div id="runner-${slot}" class="runner-panel" style="display:flex;flex-direction:column;border-top:3px solid ${lang.color}">
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid var(--b1);background:var(--s1)">
-            <span style="font-family:var(--font-mono);font-size:11px;color:${lang.color}">${lang.icon} ${lang.name}</span>
-            ${canRun ? `<button type="button" class="runner-run font-mono text-[10px] uppercase tracking-[1px] px-3 py-1.5 rounded bg-[var(--lime)] text-black hover:bg-white transition-colors" data-slot="${slot}">Run</button>` : "<span style=\"font-family:var(--font-mono);font-size:9px;color:var(--tx3)\">Run only for JavaScript/TypeScript</span>"}
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--b1);background:var(--s1)">
+            <span style="font-family:var(--font-mono);font-size:12px;color:${lang.color}">${lang.icon} ${lang.name}</span>
+            <span style="font-family:var(--font-mono);font-size:11px;color:var(--tx3)">${meta.runnable ? "Real run" : "Pseudo run"}</span>
           </div>
-          <textarea class="runner-code font-mono text-[11px] p-4 w-full min-h-[140px] resize-y bg-[#0d1117] text-[#c9d1d9] border-0 outline-none" style="tab-size:2" data-slot="${slot}" spellcheck="false"></textarea>
-          <div class="runner-output font-mono text-[10px] p-4 border-t border-[var(--b1)] bg-[var(--s2)] min-h-[80px]" data-slot="${slot}" style="white-space:pre-wrap;word-break:break-all"></div>
+          <p style="margin:0;padding:10px 16px;border-bottom:1px solid var(--b1);font-family:var(--font-mono);font-size:11px;color:var(--tx3)">${meta.note}</p>
+          <textarea class="runner-code font-mono text-xs p-4 w-full min-h-[150px] resize-y bg-[#0d1117] text-[#c9d1d9] border-0 outline-none" style="tab-size:2" data-slot="${slot}" spellcheck="false"></textarea>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-top:1px solid var(--b1);background:var(--s2)">
+            <button type="button" class="runner-run font-mono text-[11px] uppercase tracking-[1px] px-3 py-1.5 rounded bg-[var(--lime)] text-black hover:bg-white transition-colors" data-slot="${slot}" data-runnable="${meta.runnable}">${btnLabel}</button>
+            <span style="font-family:var(--font-mono);font-size:10px;color:var(--tx3)">${task?.group?.title || "Current task"}</span>
+          </div>
+          <div class="runner-output font-mono text-[11px] p-4 border-t border-[var(--b1)] bg-[var(--s2)] min-h-[100px]" data-slot="${slot}" style="white-space:pre-wrap;word-break:break-word"></div>
         </div>
       `;
     }
+
     container.innerHTML = runnerPanel(a, "a") + runnerPanel(b, "b");
 
-    ["a", "b"].forEach((slot) => {
-      const ta = container.querySelector(`.runner-code[data-slot="${slot}"]`);
-      const lang = slot === "a" ? a : b;
-      const initialCode = EXAMPLES[lang.id]?.[0]?.code ?? "// No example";
-      if (ta) ta.value = initialCode;
-    });
+    const aCode = container.querySelector('.runner-code[data-slot="a"]');
+    const bCode = container.querySelector('.runner-code[data-slot="b"]');
+    if (aCode) aCode.value = getSnippet(a, task?.group);
+    if (bCode) bCode.value = getSnippet(b, task?.group);
 
     container.querySelectorAll(".runner-run").forEach((btn) => {
       btn.addEventListener("click", () => {
         const slot = btn.dataset.slot;
         const lang = slot === "a" ? a : b;
+        const meta = RUNNER_META[lang.id] || {
+          runnable: false,
+          demoType: "pseudo",
+          note: "This language is shown as a simulated output demo in the browser UI.",
+        };
         const ta = container.querySelector(`.runner-code[data-slot="${slot}"]`);
         const out = container.querySelector(`.runner-output[data-slot="${slot}"]`);
-        if (!ta || !out || !runnable(lang.id)) return;
-        const code = ta.value;
-        const logs = [];
-        const origLog = console.log;
-        const origError = console.error;
-        console.log = (...args) => { logs.push({ type: "log", text: args.map((x) => (typeof x === "object" ? JSON.stringify(x) : String(x))).join(" ") }); };
-        console.error = (...args) => { logs.push({ type: "error", text: args.map(String).join(" ") }); };
-        const t0 = performance.now();
-        let memBefore, memAfter;
-        if (typeof performance !== "undefined" && performance.memory) {
-          memBefore = performance.memory.usedJSHeapSize;
+        if (!ta || !out) return;
+
+        if (meta.runnable) {
+          out.textContent = runJsCode(ta.value);
+          return;
         }
-        try {
-          new Function(code)();
-        } catch (err) {
-          logs.push({ type: "error", text: err.message || String(err) });
-        }
-        const t1 = performance.now();
-        if (typeof performance !== "undefined" && performance.memory) {
-          memAfter = performance.memory.usedJSHeapSize;
-        }
-        console.log = origLog;
-        console.error = origError;
-        const timeMs = (t1 - t0).toFixed(2);
-        const memStr = memBefore != null && memAfter != null
-          ? `${((memAfter - memBefore) / 1048576).toFixed(2)} MB delta (heap)`
-          : "N/A (Chrome only)";
-        const consoleText = logs.length
-          ? logs.map((l) => (l.type === "error" ? `Error: ${l.text}` : l.text)).join("\n")
-          : "(no output)";
-        out.textContent = `Time: ${timeMs} ms\nMemory: ${memStr}\n\nConsole:\n${consoleText}`;
+
+        const expectedOutput = task?.expectedOutput || "Output depends on runtime environment.";
+        out.textContent = `Execution: Simulated (${lang.name})\nExpected output: ${expectedOutput}\n\nNote: ${meta.note}\nComplexity hint: syntax and control flow are accurate; runtime timing and memory are illustrative.`;
       });
     });
   }
@@ -477,5 +724,6 @@ const catClass: Record<Language["category"], string> = {
       }
     }
   } catch (_) {}
+
   maybeRenderComparison();
 </script>
