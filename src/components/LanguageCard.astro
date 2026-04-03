@@ -17,9 +17,9 @@ function scoreClass(v: number): string {
 const pct = (v: number) => `${v * 10}%`;
 
 function barColor(v: number): string {
-  if (v >= 8) return "#22c55e";
-  if (v >= 5) return "#f59e0b";
-  return "#ef4444";
+  if (v >= 8) return "var(--score-high)";
+  if (v >= 5) return "var(--score-mid)";
+  return "var(--score-low)";
 }
 
 const catClass: Record<Language["category"], string> = {
@@ -47,7 +47,7 @@ const metrics: Array<{
   { label: "Performance", value: lang.performance, tip: lang.tooltips.performance },
   { label: "Memory", value: lang.memoryEfficiency, tip: lang.tooltips.memory },
   { label: "Learnability", value: lang.learnability, tip: lang.tooltips.learnability },
-  { label: "Dev Speed", value: lang.devSpeed, tip: "" },
+  { label: "Dev Speed", value: lang.devSpeed, tip: "How quickly you can go from idea to working code. Considers syntax verbosity, REPL availability, compile times, and iteration speed. A 10 means instant feedback loops; a 1 means days to get 'hello world' running correctly." },
   { label: "Ecosystem", value: lang.ecosystem, tip: lang.tooltips.ecosystem },
   { label: "Concurrency", value: lang.concurrency, tip: lang.tooltips.concurrency },
 ];
@@ -56,13 +56,13 @@ const metrics: Array<{
 <article
   class="
     group relative flex flex-col gap-6
-    bg-[var(--s1)] border border-[var(--b1)]
-    hover:border-[var(--b2)] hover:bg-[var(--s2)]
+    border border-[var(--b1)]
+    hover:border-[var(--b2)] hover:brightness-125
     transition-all duration-300 ease-out
     animate-fade-up card-hover-glow
     overflow-hidden rounded-lg
   "
-  style={`animation-delay: ${delayMs}ms`}
+  style={`animation-delay: ${delayMs}ms; background-color: ${lang.bgColor};`}
   data-category={lang.category}
   data-id={lang.id}
   data-name={lang.name.toLowerCase()}
@@ -169,7 +169,7 @@ const metrics: Array<{
           lang.pros.slice(0, 4).map((pro) => (
             <li class="flex gap-2.5 items-start">
               <span
-                class="mt-[6px] size-[5px] rounded-full shrink-0 bg-[#22c55e]"
+                class="mt-[6px] size-[5px] rounded-full shrink-0 bg-[var(--score-high)]"
                 aria-hidden="true"
               />
               <span class="font-mono text-[12px] text-[var(--tx2)] leading-relaxed">
@@ -190,7 +190,7 @@ const metrics: Array<{
           lang.cons.slice(0, 4).map((con) => (
             <li class="flex gap-2.5 items-start">
               <span
-                class="mt-[6px] size-[5px] rounded-full shrink-0 bg-[#ef4444]"
+                class="mt-[6px] size-[5px] rounded-full shrink-0 bg-[var(--score-low)]"
                 aria-hidden="true"
               />
               <span class="font-mono text-[12px] text-[var(--tx2)] leading-relaxed">
@@ -210,7 +210,7 @@ const metrics: Array<{
     <div class="flex flex-wrap gap-1.5">
       {
         lang.useCases.slice(0, 5).map((uc) => (
-          <span class="font-mono text-[10px] px-2 py-0.5 rounded bg-[rgba(163,230,53,0.06)] border border-[rgba(163,230,53,0.12)] text-[var(--lime-dim)] tracking-[0.3px]">
+          <span class="font-mono text-[10px] px-2 py-0.5 rounded bg-[rgba(163,230,53,0.06)] border border-[rgba(163,230,53,0.18)] text-[rgba(163,230,53,0.75)] tracking-[0.3px]">
             {uc}
           </span>
         ))
@@ -218,7 +218,7 @@ const metrics: Array<{
     </div>
   </div>
 
-  <blockquote class="mx-6 border-l-2 border-[var(--b2)] pl-3 font-serif italic text-sm text-[var(--tx3)] leading-relaxed">
+  <blockquote class="mx-6 border-l-2 border-[var(--b2)] pl-3 font-serif italic text-sm text-[var(--tx2)] leading-relaxed">
     {lang.verdict}
   </blockquote>
 

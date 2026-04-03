@@ -26,6 +26,11 @@
   --red: #ef4444;
   --green: #22c55e;
   --cyan: #06b6d4;
+
+  /* unified score system — use these everywhere */
+  --score-high: #4ade80;
+  --score-mid: #fbbf24;
+  --score-low: #f87171;
 }
 
 html {
@@ -187,9 +192,9 @@ body {
 .job-medium { color: #fbbf24; background: rgba(251, 191, 36, 0.1); }
 .job-low { color: #f87171; background: rgba(248, 113, 113, 0.1); }
 
-.score-high { color: #4ade80; }
-.score-mid { color: #fbbf24; }
-.score-low { color: #f87171; }
+.score-high { color: var(--score-high); }
+.score-mid { color: var(--score-mid); }
+.score-low { color: var(--score-low); }
 
 pre.code-block {
   background: #0d1117;
