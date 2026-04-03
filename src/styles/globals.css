@@ -110,6 +110,19 @@ body {
   transform-origin: left center;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up,
+  .animate-fade-in {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  .animate-bar-grow {
+    animation: none;
+    transform: scaleX(1);
+  }
+}
+
 .delay-0 { animation-delay: 0ms; }
 .delay-50 { animation-delay: 50ms; }
 .delay-100 { animation-delay: 100ms; }
