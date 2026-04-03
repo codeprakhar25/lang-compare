@@ -213,7 +213,16 @@ const catClass: Record<Language["category"], string> = {
   function drawRadar(a, b) {
     const canvas = document.getElementById("radar-canvas");
     const ctx = canvas?.getContext("2d");
-    if (!ctx) return;
+    if (!ctx) {
+      const radarContainer = canvas?.parentElement;
+      if (radarContainer && !radarContainer.querySelector(".radar-fallback")) {
+        const msg = document.createElement("p");
+        msg.className = "radar-fallback font-mono text-xs text-[var(--tx3)] text-center py-8";
+        msg.textContent = "Radar chart unavailable in this browser. Use the metric bars below.";
+        canvas?.replaceWith(msg);
+      }
+      return;
+    }
 
     const W = canvas.width;
     const H = canvas.height;
@@ -647,7 +656,64 @@ const catClass: Record<Language["category"], string> = {
       ? logs.map((l) => (l.type === "error" ? `Error: ${l.text}` : l.text)).join("\n")
       : "(no output)";
 
-    return `Execution: Real browser run\nTime: ${timeMs} ms\nMemory: ${memStr}\n\nConsole:\n${consoleText}`;
+    return {
+      timeMs: parseFloat(timeMs),
+      memStr,
+      consoleText,
+      display: `Execution: Real browser run\nTime: ${timeMs} ms\nMemory: ${memStr}\n\nConsole:\n${consoleText}`,
+    };
+  }
+
+  function renderDiff(container, a, b, runResults) {
+    const diff = container.querySelector(".runner-diff");
+    if (!diff) return;
+    const ra = runResults.a;
+    const rb = runResults.b;
+    if (!ra || !rb) return;
+
+    const aOut = ra.consoleText.trim();
+    const bOut = rb.consoleText.trim();
+    const outputMatch = aOut === bOut;
+    const matchColor = outputMatch ? "var(--score-high)" : "var(--score-mid)";
+    const matchLabel = outputMatch ? "MATCH" : "DIFFERENT";
+
+    let timeLine;
+    if (ra.runnable && rb.runnable) {
+      const delta = Math.abs(ra.timeMs - rb.timeMs).toFixed(2);
+      const faster = ra.timeMs <= rb.timeMs ? a.name : b.name;
+      timeLine = `${a.name}: ${ra.timeMs}ms | ${b.name}: ${rb.timeMs}ms<br><span style="color:var(--lime)">${faster} faster by ${delta}ms</span>`;
+    } else if (ra.runnable) {
+      timeLine = `${a.name}: ${ra.timeMs}ms (real)<br>${b.name}: simulated`;
+    } else if (rb.runnable) {
+      timeLine = `${b.name}: ${rb.timeMs}ms (real)<br>${a.name}: simulated`;
+    } else {
+      timeLine = "Both simulated — no real timing";
+    }
+
+    const execLine = (lang, r) =>
+      `<span style="color:${lang.color}">${lang.name}</span>: <span style="color:${r.runnable ? "var(--score-high)" : "var(--score-mid)"}">${r.runnable ? "real" : "simulated"}</span>`;
+
+    diff.style.display = "block";
+    diff.innerHTML = `
+      <div style="padding:16px 20px;background:var(--s2);border-top:1px solid var(--b2)">
+        <p style="font-family:var(--font-mono);font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--tx3);margin:0 0 12px">// run comparison</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+          <div style="background:var(--s3);border:1px solid var(--b1);border-radius:6px;padding:12px">
+            <p style="font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--tx3);margin:0 0 6px">Output</p>
+            <p style="font-family:var(--font-mono);font-size:13px;font-weight:600;color:${matchColor};margin:0">${matchLabel}</p>
+            ${!outputMatch ? `<p style="font-family:var(--font-mono);font-size:10px;color:var(--tx3);margin:4px 0 0">Programs differ in output</p>` : ""}
+          </div>
+          <div style="background:var(--s3);border:1px solid var(--b1);border-radius:6px;padding:12px">
+            <p style="font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--tx3);margin:0 0 6px">Timing</p>
+            <p style="font-family:var(--font-mono);font-size:11px;color:var(--tx2);margin:0;line-height:1.6">${timeLine}</p>
+          </div>
+          <div style="background:var(--s3);border:1px solid var(--b1);border-radius:6px;padding:12px">
+            <p style="font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--tx3);margin:0 0 6px">Execution</p>
+            <p style="font-family:var(--font-mono);font-size:11px;margin:0;line-height:1.8">${execLine(a, ra)}<br>${execLine(b, rb)}</p>
+          </div>
+        </div>
+      </div>
+    `;
   }
 
   function renderCodeRunner(container, a, b) {
@@ -679,7 +745,8 @@ const catClass: Record<Language["category"], string> = {
       `;
     }
 
-    container.innerHTML = runnerPanel(a, "a") + runnerPanel(b, "b");
+    container.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr">${runnerPanel(a, "a")}${runnerPanel(b, "b")}</div><div class="runner-diff" style="display:none"></div>`;
+    const runResults = { a: null, b: null };
 
     const aCode = container.querySelector('.runner-code[data-slot="a"]');
     const bCode = container.querySelector('.runner-code[data-slot="b"]');
@@ -699,13 +766,18 @@ const catClass: Record<Language["category"], string> = {
         const out = container.querySelector(`.runner-output[data-slot="${slot}"]`);
         if (!ta || !out) return;
 
+        let result;
         if (meta.runnable) {
-          out.textContent = runJsCode(ta.value);
-          return;
+          result = runJsCode(ta.value);
+          out.textContent = result.display;
+        } else {
+          const expectedOutput = task?.expectedOutput || "Output depends on runtime environment.";
+          const text = `Execution: Simulated (${lang.name})\nExpected output: ${expectedOutput}\n\nNote: ${meta.note}\nComplexity hint: syntax and control flow are accurate; runtime timing and memory are illustrative.`;
+          out.textContent = text;
+          result = { timeMs: null, consoleText: expectedOutput, display: text };
         }
-
-        const expectedOutput = task?.expectedOutput || "Output depends on runtime environment.";
-        out.textContent = `Execution: Simulated (${lang.name})\nExpected output: ${expectedOutput}\n\nNote: ${meta.note}\nComplexity hint: syntax and control flow are accurate; runtime timing and memory are illustrative.`;
+        runResults[slot] = { ...result, runnable: meta.runnable };
+        renderDiff(container, a, b, runResults);
       });
     });
   }
