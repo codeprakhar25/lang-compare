@@ -13,9 +13,9 @@ const categories: Array<{ id: Language["category"] | "all"; label: string }> = [
 ];
 
 function tablePillClass(v: number): string {
-  if (v >= 8) return "text-green-400 bg-green-400/10";
-  if (v >= 5) return "text-amber-400 bg-amber-400/10";
-  return "text-red-400 bg-red-400/10";
+  if (v >= 8) return "text-[var(--score-high)] bg-[var(--score-high)]/10";
+  if (v >= 5) return "text-[var(--score-mid)] bg-[var(--score-mid)]/10";
+  return "text-[var(--score-low)] bg-[var(--score-low)]/10";
 }
 
 const jobTableClass: Record<Language["jobMarket"], string> = {
@@ -94,66 +94,88 @@ const jobTableClass: Record<Language["jobMarket"], string> = {
       sticky top-[56px] z-10
       bg-[var(--bg)] border-b border-[var(--b2)]
       shadow-[0_4px_20px_rgba(0,0,0,0.25)]
-      px-6 py-4 flex items-center gap-3 flex-wrap
+      px-6 py-3 flex flex-col gap-2
     "
   >
-    <div id="filter-group" class="flex gap-1.5 flex-wrap">
-      {
-        categories.map((cat) => (
-          <button
-            class:list={[
-              "filter-pill font-mono text-[11px] uppercase tracking-[1.5px] px-3.5 py-2 rounded border transition-all duration-200 cursor-pointer",
-              cat.id === "all"
-                ? "bg-[var(--lime)] text-black border-[var(--lime)]"
-                : "bg-transparent text-[var(--tx3)] border-[var(--b1)] hover:border-[var(--b2)] hover:text-[var(--tx)]",
-            ]}
-            data-cat={cat.id}
-          >
-            {cat.label}
-          </button>
-        ))
-      }
-    </div>
-    <div class="w-px h-5 bg-[var(--b1)] hidden sm:block" aria-hidden="true" />
-    <div class="flex items-center gap-1.5">
-      <span class="font-mono text-[10px] uppercase tracking-[1.5px] text-[var(--tx3)]">
-        Sort:
+    <div class="flex items-center gap-3 flex-wrap">
+      <span class="font-mono text-[9px] uppercase tracking-[2px] text-[var(--tx3)] w-10 shrink-0">
+        Filter
       </span>
-      {
-        (
-          [
-            ["name", "Name"],
-            ["performance", "Perf"],
-            ["learnability", "Learn"],
-            ["devSpeed", "Dev Spd"],
-            ["ecosystem", "Ecosystem"],
-          ] as [string, string][]
-        ).map(([key, label]) => (
-          <button
-            class="sort-btn font-mono text-[11px] uppercase tracking-[1px] px-2.5 py-1.5 rounded text-[var(--tx3)] hover:text-[var(--lime)] transition-colors cursor-pointer"
-            data-sort={key}
-          >
-            {label}
-          </button>
-        ))
-      }
+      <div id="filter-group" class="flex gap-1.5 flex-wrap">
+        {
+          categories.map((cat) => (
+            <button
+              class:list={[
+                "filter-pill font-mono text-[11px] uppercase tracking-[1.5px] px-3.5 py-1.5 rounded border transition-all duration-200 cursor-pointer",
+                cat.id === "all"
+                  ? "bg-[var(--lime)] text-black border-[var(--lime)]"
+                  : "bg-transparent text-[var(--tx3)] border-[var(--b1)] hover:border-[var(--b2)] hover:text-[var(--tx)]",
+              ]}
+              data-cat={cat.id}
+            >
+              {cat.label}
+            </button>
+          ))
+        }
+      </div>
     </div>
-    <div class="ml-auto flex items-center gap-2 border border-[var(--b2)] rounded px-3 py-2 bg-[var(--s2)]">
-      <span class="font-mono text-xs text-[var(--lime)]">//</span>
-      <input
-        id="search-input"
-        type="text"
-        placeholder="filter..."
-        autocomplete="off"
-        class="bg-transparent font-mono text-xs text-[var(--tx)] placeholder:text-[var(--tx3)] outline-hidden w-44"
-      />
+    <div class="hidden sm:flex items-center gap-3 flex-wrap">
+      <span class="font-mono text-[9px] uppercase tracking-[2px] text-[var(--tx3)] w-10 shrink-0">
+        Sort
+      </span>
+      <div class="flex items-center gap-1">
+        {
+          (
+            [
+              ["name", "Name"],
+              ["performance", "Perf"],
+              ["learnability", "Learn"],
+              ["devSpeed", "Dev Spd"],
+              ["ecosystem", "Ecosystem"],
+            ] as [string, string][]
+          ).map(([key, label]) => (
+            <button
+              class="sort-btn font-mono text-[11px] uppercase tracking-[1px] px-2.5 py-1 rounded text-[var(--tx3)] hover:text-[var(--lime)] transition-colors cursor-pointer"
+              data-sort={key}
+            >
+              {label}
+            </button>
+          ))
+        }
+      </div>
+      <div class="ml-auto flex items-center gap-2 border border-[var(--b2)] rounded px-3 py-1.5 bg-[var(--s2)]">
+        <span class="font-mono text-xs text-[var(--lime)]">//</span>
+        <input
+          id="search-input"
+          type="text"
+          placeholder="filter..."
+          autocomplete="off"
+          class="bg-transparent font-mono text-xs text-[var(--tx)] placeholder:text-[var(--tx3)] outline-hidden w-44"
+        />
+      </div>
+      <span
+        id="result-count"
+        class="font-mono text-[11px] text-[var(--tx3)] tracking-[1px]"
+      >
+        {languages.length} languages
+      </span>
     </div>
-    <span
-      id="result-count"
-      class="font-mono text-[11px] text-[var(--tx3)] tracking-[1px] hidden sm:block"
-    >
-      {languages.length} languages
-    </span>
+    <!-- mobile: search + count row (visible only on xs) -->
+    <div class="flex sm:hidden items-center gap-2">
+      <div class="flex-1 flex items-center gap-2 border border-[var(--b2)] rounded px-3 py-1.5 bg-[var(--s2)]">
+        <span class="font-mono text-xs text-[var(--lime)]">//</span>
+        <input
+          id="search-input-mobile"
+          type="text"
+          placeholder="filter..."
+          autocomplete="off"
+          class="bg-transparent font-mono text-xs text-[var(--tx)] placeholder:text-[var(--tx3)] outline-hidden w-full"
+        />
+      </div>
+      <span id="result-count-mobile" class="font-mono text-[11px] text-[var(--tx3)] tracking-[1px] shrink-0">
+        {languages.length}
+      </span>
+    </div>
   </div>
 
   <div
@@ -162,6 +184,24 @@ const jobTableClass: Record<Language["jobMarket"], string> = {
     style="grid-template-columns: repeat(auto-fill, minmax(360px, 1fr))"
   >
     {languages.map((lang, i) => <LanguageCard lang={lang} index={i} />)}
+  </div>
+
+  <div
+    id="grid-empty-state"
+    class="hidden flex-col items-center justify-center gap-5 py-24 px-8 bg-[var(--s2)]"
+  >
+    <p class="font-mono text-[11px] uppercase tracking-[4px] text-[var(--tx3)]">
+      // no match
+    </p>
+    <p class="font-mono text-sm text-[var(--tx3)] text-center max-w-xs leading-relaxed">
+      No languages match your current filter or search. Try a different term or clear your selection.
+    </p>
+    <button
+      id="clear-filters-btn"
+      class="font-mono text-[11px] uppercase tracking-[1.5px] px-5 py-2.5 border border-[var(--b2)] text-[var(--tx)] hover:border-[var(--lime)] hover:text-[var(--lime)] transition-colors duration-200 rounded cursor-pointer"
+    >
+      Clear filters
+    </button>
   </div>
 
   <section class="px-8 py-20 border-t border-[var(--b1)]">
@@ -258,6 +298,29 @@ const jobTableClass: Record<Language["jobMarket"], string> = {
     </div>
   </section>
 
+  <!-- floating compare bar -->
+  <div
+    id="compare-bar"
+    class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 hidden items-center gap-4 px-5 py-3 rounded-lg border border-[var(--b2)] bg-[var(--s3)] shadow-[0_8px_40px_rgba(0,0,0,0.7)] animate-fade-up"
+    style="min-width: 340px"
+  >
+    <div id="compare-bar-langs" class="flex items-center gap-3 flex-1 font-mono text-sm text-[var(--tx)]"></div>
+    <a
+      id="compare-bar-cta"
+      href="/playground"
+      class="font-mono text-[10px] uppercase tracking-[1.5px] px-4 py-2 bg-[var(--lime)] text-black rounded shrink-0 hover:bg-white transition-colors duration-150"
+    >
+      Compare &rarr;
+    </a>
+    <button
+      id="compare-bar-dismiss"
+      class="font-mono text-[11px] text-[var(--tx3)] hover:text-[var(--tx)] transition-colors cursor-pointer shrink-0"
+      aria-label="Dismiss"
+    >
+      ✕
+    </button>
+  </div>
+
   <section class="border-t border-[var(--b1)] px-10 py-24 flex flex-col items-center text-center gap-6">
     <p class="font-mono text-[11px] uppercase tracking-[4px] text-[var(--lime)]">
       // side-by-side
@@ -286,9 +349,12 @@ const jobTableClass: Record<Language["jobMarket"], string> = {
   type CompareEntry = { id: string; name: string; icon: string };
 
   const grid = document.getElementById("cards-grid");
+  const gridEmptyState = document.getElementById("grid-empty-state");
   const filterGrp = document.getElementById("filter-group");
   const searchEl = document.getElementById("search-input") as HTMLInputElement | null;
+  const searchElMobile = document.getElementById("search-input-mobile") as HTMLInputElement | null;
   const countEl = document.getElementById("result-count");
+  const countElMobile = document.getElementById("result-count-mobile");
   let activeCat = "all";
   let activeSearch = "";
 
@@ -306,7 +372,34 @@ const jobTableClass: Record<Language["jobMarket"], string> = {
       if (show) count++;
     });
     if (countEl) countEl.textContent = `${count} language${count !== 1 ? "s" : ""}`;
+    if (countElMobile) countElMobile.textContent = String(count);
+    if (gridEmptyState) {
+      if (count === 0) {
+        gridEmptyState.classList.remove("hidden");
+        gridEmptyState.classList.add("flex");
+      } else {
+        gridEmptyState.classList.add("hidden");
+        gridEmptyState.classList.remove("flex");
+      }
+    }
   }
+
+  document.getElementById("clear-filters-btn")?.addEventListener("click", () => {
+    activeCat = "all";
+    if (searchEl) searchEl.value = "";
+    if (searchElMobile) searchElMobile.value = "";
+    activeSearch = "";
+    filterGrp?.querySelectorAll<HTMLButtonElement>(".filter-pill").forEach((b) => {
+      const isAll = b.dataset.cat === "all";
+      b.classList.toggle("bg-[var(--lime)]", isAll);
+      b.classList.toggle("text-black", isAll);
+      b.classList.toggle("border-[var(--lime)]", isAll);
+      b.classList.toggle("bg-transparent", !isAll);
+      b.classList.toggle("text-[var(--tx3)]", !isAll);
+      b.classList.toggle("border-[var(--b1)]", !isAll);
+    });
+    applyFilters();
+  });
 
   filterGrp?.addEventListener("click", (e) => {
     const btn = (e.target as HTMLElement).closest<HTMLButtonElement>(".filter-pill");
@@ -325,6 +418,13 @@ const jobTableClass: Record<Language["jobMarket"], string> = {
 
   searchEl?.addEventListener("input", () => {
     activeSearch = searchEl.value.toLowerCase().trim();
+    if (searchElMobile) searchElMobile.value = searchEl.value;
+    applyFilters();
+  });
+
+  searchElMobile?.addEventListener("input", () => {
+    activeSearch = searchElMobile.value.toLowerCase().trim();
+    if (searchEl) searchEl.value = searchElMobile.value;
     applyFilters();
   });
 
@@ -347,6 +447,7 @@ const jobTableClass: Record<Language["jobMarket"], string> = {
       });
 
       cards.forEach((c) => grid?.appendChild(c));
+      applyFilters();
     });
   });
 
@@ -370,7 +471,31 @@ const jobTableClass: Record<Language["jobMarket"], string> = {
     });
   }
 
+  const compareBar = document.getElementById("compare-bar");
+  const compareBarLangs = document.getElementById("compare-bar-langs");
+  const compareBarDismiss = document.getElementById("compare-bar-dismiss");
+
+  function syncCompareBar(): void {
+    if (!compareBar || !compareBarLangs) return;
+    if (selected.length === 2) {
+      compareBarLangs.textContent = `${selected[0].icon} ${selected[0].name}  vs  ${selected[1].icon} ${selected[1].name}`;
+      compareBar.classList.remove("hidden");
+      compareBar.classList.add("flex");
+    } else {
+      compareBar.classList.add("hidden");
+      compareBar.classList.remove("flex");
+    }
+  }
+
+  compareBarDismiss?.addEventListener("click", () => {
+    selected = [];
+    sessionStorage.removeItem("langCompare");
+    syncCompareBtns();
+    syncCompareBar();
+  });
+
   syncCompareBtns();
+  syncCompareBar();
 
   grid?.addEventListener("click", (e) => {
     const btn = (e.target as HTMLElement).closest<HTMLButtonElement>(".compare-btn");
@@ -394,10 +519,6 @@ const jobTableClass: Record<Language["jobMarket"], string> = {
 
     sessionStorage.setItem("langCompare", JSON.stringify(selected));
     syncCompareBtns();
-
-    if (selected.length === 2) {
-      const go = confirm(`Compare ${selected[0].name} vs ${selected[1].name}?\nOpen the playground?`);
-      if (go) window.location.href = "/playground";
-    }
+    syncCompareBar();
   });
 </script>
