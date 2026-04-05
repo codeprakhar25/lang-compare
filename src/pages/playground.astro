@@ -354,7 +354,7 @@ const catClass: Record<Language["category"], string> = {
   }
 
   // maps METRICS key → language tooltips object key (some differ)
-  const METRIC_TIP_KEY: Record<string, string | null> = {
+  const METRIC_TIP_KEY = {
     performance: "performance",
     memoryEfficiency: "memory",
     learnability: "learnability",
@@ -378,8 +378,8 @@ const catClass: Record<Language["category"], string> = {
           : `<span style="font-family:var(--font-mono);font-size:10px;padding:3px 9px;border-radius:20px;background:${winner === "a" ? a.color : b.color};color:#000;letter-spacing:1px">${winner === "a" ? a.icon : b.icon} WIN</span>`;
 
       const tipKey = METRIC_TIP_KEY[m.key];
-      const aTip = tipKey ? (a.tooltips as any)[tipKey] : METRIC_HELP[m.key]?.whyItMatters ?? "";
-      const bTip = tipKey ? (b.tooltips as any)[tipKey] : METRIC_HELP[m.key]?.whyItMatters ?? "";
+      const aTip = tipKey ? a.tooltips[tipKey] : (METRIC_HELP[m.key]?.whyItMatters || "");
+      const bTip = tipKey ? b.tooltips[tipKey] : (METRIC_HELP[m.key]?.whyItMatters || "");
 
       return `
         <div class="metric-bar-row" data-bar-idx="${idx}" style="cursor:pointer;border-radius:4px;transition:background 0.15s">
@@ -430,21 +430,21 @@ const catClass: Record<Language["category"], string> = {
     // accordion logic — click toggles; clicking a different row closes the previous
     el.querySelectorAll(".metric-bar-row").forEach((row) => {
       row.addEventListener("click", () => {
-        const idx = (row as HTMLElement).dataset.barIdx;
+        const idx = row.dataset.barIdx;
         const acc = document.getElementById(`metric-acc-${idx}`);
-        const hint = row.querySelector(`.bar-expand-hint`);
+        const hint = row.querySelector(".bar-expand-hint");
         if (!acc) return;
         const isOpen = acc.style.display !== "none";
 
         // close all
-        el.querySelectorAll(".metric-accordion").forEach((a) => ((a as HTMLElement).style.display = "none"));
-        el.querySelectorAll(".bar-expand-hint").forEach((h) => { (h as HTMLElement).textContent = "▼ why"; });
-        el.querySelectorAll(".metric-bar-row").forEach((r) => ((r as HTMLElement).style.background = ""));
+        el.querySelectorAll(".metric-accordion").forEach((a) => { a.style.display = "none"; });
+        el.querySelectorAll(".bar-expand-hint").forEach((h) => { h.textContent = "▼ why"; });
+        el.querySelectorAll(".metric-bar-row").forEach((r) => { r.style.background = ""; });
 
         if (!isOpen) {
           acc.style.display = "block";
-          if (hint) (hint as HTMLElement).textContent = "▲ hide";
-          (row as HTMLElement).style.background = "rgba(255,255,255,0.02)";
+          if (hint) hint.textContent = "▲ hide";
+          row.style.background = "rgba(255,255,255,0.02)";
         }
       });
     });
