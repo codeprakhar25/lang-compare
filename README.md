@@ -1,58 +1,116 @@
-# 🔷 LangMatrix — Programming Language Comparison
+# LangMatrix — Programming Language Comparison
 
-A beautiful, honest comparison of 15+ programming languages built with Astro.
+> A beautiful, honest comparison of 15+ programming languages — scored on real-world metrics, not hype.
 
-## Features
+**Live site:** [langscompare.site](https://langscompare.site)
 
-- **Overview Page** — Card grid for all languages with:
-  - 6 metric bars (performance, memory, learnability, dev speed, ecosystem, concurrency)
-  - Hover tooltips with detailed explanations for every metric
-  - Filter by category (Systems / Web / Enterprise / Scripting / General)
-  - Sort by any metric
-  - Live search
-  - Full matrix table at the bottom
+Built with Astro, deployed on AWS via SST, styled with a dark editorial aesthetic.
 
-- **Comparison Playground** — Side-by-side comparison with:
-  - Drag-and-drop from sidebar (or click) to select any two languages
-  - Interactive radar chart rendered on canvas
-  - Metric bar breakdown with winner badges
-  - Technical specs table
-  - "When to choose" analysis
-  - Code examples for both languages
+---
 
-## File Structure
+## What it is
+
+LangMatrix lets you explore and compare programming languages across six metrics:
+
+| Metric | What it measures |
+|---|---|
+| Performance | Raw execution speed and throughput |
+| Memory | Memory efficiency and footprint |
+| Learnability | How quickly a newcomer becomes productive |
+| Dev Speed | How fast you can ship features |
+| Ecosystem | Library quality, tooling, community |
+| Concurrency | Async/parallel programming support |
+
+Every score has a tooltip explaining why the language got that rating — no black boxes.
+
+---
+
+## Pages
+
+### Overview (`/`)
+- Card grid for all languages with animated metric bars
+- Filter by category: Systems / Web / Enterprise / Scripting / General
+- Sort by any metric
+- Live search
+- Click any metric bar to see the reasoning behind the score
+- Full comparison matrix table at the bottom
+
+### Playground (`/playground`)
+- Drag-and-drop (or click) to pick any two languages side-by-side
+- Interactive radar chart rendered on canvas
+- Metric bar breakdown with winner badges
+- Technical specs table (typing, paradigm, runtime, etc.)
+- "When to choose" analysis
+- Code examples for both languages
+
+---
+
+## Tech stack
+
+- **[Astro](https://astro.build)** — static site framework
+- **TypeScript** — all data is fully typed
+- **AWS** (CloudFront + S3) — hosting via SST
+- **[SST](https://sst.dev)** — infrastructure as code
+
+---
+
+## Local development
+
+```bash
+npm install
+npm run dev       # starts at http://localhost:4321
+npm run build     # production build → dist/
+npm run preview   # preview the production build locally
+```
+
+---
+
+## Project structure
 
 ```
 src/
 ├── data/
-│   ├── languages.ts    ← All language data (ratings, pros, cons, tooltips)
+│   ├── languages.ts    ← All language data (ratings, pros/cons, tooltips, specs)
 │   └── examples.ts     ← Code examples per language
 ├── components/
 │   └── LanguageCard.astro
 ├── layouts/
 │   └── Layout.astro    ← Shared nav + base styles
 └── pages/
-    ├── index.astro     ← Overview page
-    └── playground.astro← Comparison playground
+    ├── index.astro         ← Overview page
+    └── playground.astro    ← Comparison playground
 ```
 
-## Setup
+---
 
-```bash
-npm install
-npm run dev       # http://localhost:4321
-npm run build     # production build → dist/
-npm run preview   # preview production build
-```
+## Adding a language
 
-## Adding a Language
+1. Open `src/data/languages.ts` and add a new entry to the `languages` array. TypeScript will show you exactly which fields are required.
+2. Add code examples in `src/data/examples.ts` under the same `id`.
 
-Edit `src/data/languages.ts` and add a new `Language` object to the `languages` array. All fields are typed — TypeScript will tell you what's missing.
+That's it — no config changes needed.
 
-Then add code examples in `src/data/examples.ts` under the same `id`.
+---
+
+## Contributing
+
+PRs are welcome for:
+- Adding new languages
+- Fixing incorrect metric scores (include sources)
+- UI improvements
+
+**Note:** All PRs require review and are merged as squash commits. Please open an issue first for significant changes.
+
+---
 
 ## Design
 
-- **Fonts**: Bebas Neue (display) + Fraunces (body) + DM Mono (code/labels)
-- **Theme**: Dark editorial — deep charcoal, warm gold accents, grain texture
-- **Aesthetic**: High-end tech publication / scientific instrument
+- **Fonts:** Bebas Neue (display) · Fraunces (body) · DM Mono (code/labels)
+- **Theme:** Dark editorial — deep charcoal, warm gold accents, grain texture
+- **Aesthetic:** High-end tech publication meets scientific instrument
+
+---
+
+## License
+
+[MIT](LICENSE) — Prakhar Khatri, 2026
