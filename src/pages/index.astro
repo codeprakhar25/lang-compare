@@ -2,6 +2,11 @@
 import Layout from "../layouts/Layout.astro";
 import LanguageCard from "../components/LanguageCard.astro";
 import { languages, type Language } from "../data/languages";
+import {
+  buildWebPageSchema,
+  getComparisonPath,
+  getFeaturedComparisonPairs,
+} from "../lib/language-seo";
 
 const categories: Array<{ id: Language["category"] | "all"; label: string }> = [
   { id: "all", label: "All" },
@@ -24,9 +29,23 @@ const jobTableClass: Record<Language["jobMarket"], string> = {
   medium: "text-amber-400 bg-amber-400/10",
   low: "text-red-400 bg-red-400/10",
 };
+
+const featuredPairs = getFeaturedComparisonPairs();
+const pageTitle = "Compare Programming Languages with Honest Rankings";
+const pageDescription =
+  "Compare programming languages with real-world scoring for performance, memory, learnability, developer speed, ecosystem, concurrency, and jobs. Explore Langs Compare for Rust, Python, Go, JavaScript, TypeScript, Java, C++, and more.";
 ---
 
-<Layout title="LangMatrix - Programming Language Comparison">
+<Layout
+  title={pageTitle}
+  description={pageDescription}
+  canonicalPath="/"
+  schema={buildWebPageSchema({
+    title: pageTitle,
+    description: pageDescription,
+    path: "/",
+  })}
+>
   <section class="relative overflow-hidden border-b border-[var(--b1)] bg-[var(--s1)] px-8 sm:px-10 pt-16 pb-24 md:pt-20 md:pb-28">
     <div
       class="pointer-events-none absolute inset-0 opacity-[0.02]"
@@ -48,8 +67,8 @@ const jobTableClass: Record<Language["jobMarket"], string> = {
       </h1>
 
       <p class="font-mono text-base text-[var(--tx3)] leading-relaxed max-w-xl mb-10">
-        Performance, memory, latency, ecosystem, and tradeoffs across {languages.length} languages.
-        Use tooltip hints on each card for practical meaning.
+        Compare programming languages across performance, memory, latency, ecosystem, and real-world
+        tradeoffs for {languages.length} languages. Use tooltip hints on each card for practical meaning.
       </p>
       <div class="flex items-center gap-8 mb-10">
         {
@@ -203,6 +222,44 @@ const jobTableClass: Record<Language["jobMarket"], string> = {
       Clear filters
     </button>
   </div>
+
+  <section class="px-8 py-20 border-t border-[var(--b1)] bg-[var(--s1)]">
+    <div class="max-w-6xl mx-auto">
+      <div class="flex flex-col gap-3 mb-10">
+        <p class="font-mono text-[11px] uppercase tracking-[4px] text-[var(--lime)]">
+          // indexed comparison pages
+        </p>
+        <h2 class="font-serif text-5xl text-[var(--tx)]">Popular language matchups</h2>
+        <p class="font-mono text-sm text-[var(--tx3)] max-w-3xl leading-relaxed">
+          If you searched for terms like &quot;compare programming languages&quot;, &quot;python vs
+          javascript&quot;, or &quot;rust vs go&quot;, these pages are the strongest entry points on the
+          site. Each one is crawlable, canonical, and linked from the homepage.
+        </p>
+      </div>
+
+      <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {
+          featuredPairs.map((pair) => (
+            <a
+              href={getComparisonPath(pair.left.id, pair.right.id)}
+              class="border border-[var(--b1)] rounded-lg bg-[var(--s2)] p-6 hover:border-[var(--lime)] transition-colors duration-200"
+            >
+              <h3 class="font-serif text-3xl text-[var(--tx)] mb-3">
+                {pair.left.name} vs {pair.right.name}
+              </h3>
+              <p class="font-mono text-sm text-[var(--tx3)] leading-relaxed mb-4">
+                Compare {pair.left.name} and {pair.right.name} on runtime speed, memory profile,
+                learning curve, hiring market, and where each language is strongest in production.
+              </p>
+              <span class="font-mono text-[11px] uppercase tracking-[2px] text-[var(--lime)]">
+                Open comparison -&gt;
+              </span>
+            </a>
+          ))
+        }
+      </div>
+    </div>
+  </section>
 
   <section class="px-8 py-20 border-t border-[var(--b1)]">
     <div class="mb-10">
@@ -479,6 +536,11 @@ const jobTableClass: Record<Language["jobMarket"], string> = {
     if (!compareBar || !compareBarLangs) return;
     if (selected.length === 2) {
       compareBarLangs.textContent = `${selected[0].icon} ${selected[0].name}  vs  ${selected[1].icon} ${selected[1].name}`;
+      const cta = document.getElementById("compare-bar-cta") as HTMLAnchorElement | null;
+      if (cta) {
+        const ids = [selected[0].id, selected[1].id].sort((a, b) => a.localeCompare(b));
+        cta.href = `/compare/${ids[0]}-vs-${ids[1]}`;
+      }
       compareBar.classList.remove("hidden");
       compareBar.classList.add("flex");
     } else {

@@ -7,7 +7,7 @@ import { loadEnv } from 'vite';
 
 // https://astro.build/config
 const env = loadEnv(process.cwd(), '');
-const baseUrl = env.BASE_URL || 'http://localhost:4321';
+const baseUrl = env.BASE_URL || 'https://langscompare.site';
 
 export default defineConfig({
   adapter: sst(),

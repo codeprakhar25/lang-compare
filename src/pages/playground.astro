@@ -7,6 +7,7 @@ import PlaygroundEmptyState from "../components/playground/PlaygroundEmptyState.
 import PlaygroundComparisonPanel from "../components/playground/PlaygroundComparisonPanel.astro";
 import { languages, metricHelp, type Language } from "../data/languages";
 import { codeExamples, exampleGroups, runnerMetadataByLang } from "../data/examples";
+import { buildWebPageSchema } from "../lib/language-seo";
 
 const catClass: Record<Language["category"], string> = {
   systems: "cat-systems",
@@ -17,7 +18,17 @@ const catClass: Record<Language["category"], string> = {
 };
 ---
 
-<Layout title="Playground - LangMatrix">
+<Layout
+  title="Programming Language Comparison Playground"
+  description="Interactively compare programming languages side by side with radar charts, metric scoring, scenario guidance, and code examples."
+  canonicalPath="/playground"
+  schema={buildWebPageSchema({
+    title: "Programming Language Comparison Playground",
+    description:
+      "Interactively compare programming languages side by side with radar charts, metric scoring, scenario guidance, and code examples.",
+    path: "/playground",
+  })}
+>
   <div class="flex flex-col min-h-[calc(100vh-52px)]">
     <PlaygroundHeader />
     <div class="flex flex-1 overflow-hidden">
@@ -56,6 +67,10 @@ const catClass: Record<Language["category"], string> = {
   const sidebarSearch = document.getElementById("sidebar-search");
   const compPanel = document.getElementById("comparison-panel");
   const emptyState = document.getElementById("empty-state");
+  const params = new URLSearchParams(window.location.search);
+
+  const initialLeft = params.get("left");
+  const initialRight = params.get("right");
 
   sidebarSearch?.addEventListener("input", () => {
     const q = sidebarSearch.value.toLowerCase();
@@ -194,6 +209,15 @@ const catClass: Record<Language["category"], string> = {
     } else {
       compPanel?.classList.add("hidden");
       emptyState?.classList.remove("hidden");
+    }
+  }
+
+  if (initialLeft && initialRight && initialLeft !== initialRight) {
+    const leftLang = LANGS.find((lang) => lang.id === initialLeft);
+    const rightLang = LANGS.find((lang) => lang.id === initialRight);
+    if (leftLang && rightLang) {
+      assignSlot("a", leftLang);
+      assignSlot("b", rightLang);
     }
   }
 

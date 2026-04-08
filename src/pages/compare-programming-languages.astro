@@ -1,0 +1,251 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { languages } from "../data/languages";
+import {
+  buildWebPageSchema,
+  getComparisonPath,
+  getFeaturedComparisonPairs,
+  getTopLanguagesByMetric,
+} from "../lib/language-seo";
+
+const title = "Compare Programming Languages";
+const description =
+  "Compare programming languages across performance, memory efficiency, learnability, developer speed, ecosystem, concurrency, and jobs. Explore head-to-head pages for Rust, Python, Go, JavaScript, TypeScript, Java, C++, and more.";
+
+const featuredPairs = getFeaturedComparisonPairs();
+const topPerformance = getTopLanguagesByMetric("performance");
+const topLearnability = getTopLanguagesByMetric("learnability");
+const topDevSpeed = getTopLanguagesByMetric("devSpeed");
+const topJobs = [...languages]
+  .sort((a, b) => {
+    const order = { "very-high": 4, high: 3, medium: 2, low: 1 };
+    return order[b.jobMarket] - order[a.jobMarket];
+  })
+  .slice(0, 5);
+const rankingBlocks = [
+  {
+    label: "Top performance",
+    items: topPerformance,
+    value: (language: (typeof languages)[number]) => `${language.performance}/10`,
+  },
+  {
+    label: "Fastest to learn",
+    items: topLearnability,
+    value: (language: (typeof languages)[number]) => `${language.learnability}/10`,
+  },
+  {
+    label: "Fastest to ship",
+    items: topDevSpeed,
+    value: (language: (typeof languages)[number]) => `${language.devSpeed}/10`,
+  },
+  {
+    label: "Strongest job market",
+    items: topJobs,
+    value: (language: (typeof languages)[number]) => language.jobMarket.replace("-", " "),
+  },
+];
+---
+
+<Layout
+  title={title}
+  description={description}
+  canonicalPath="/compare-programming-languages"
+  schema={buildWebPageSchema({
+    title,
+    description,
+    path: "/compare-programming-languages",
+  })}
+>
+  <section class="relative overflow-hidden border-b border-[var(--b1)] bg-[var(--s1)] px-8 sm:px-10 pt-20 pb-20 md:pt-24 md:pb-24">
+    <div
+      class="pointer-events-none absolute inset-0 opacity-[0.03]"
+      style="background-image: linear-gradient(var(--b1) 1px, transparent 1px), linear-gradient(90deg, var(--b1) 1px, transparent 1px); background-size: 44px 44px;"
+    />
+
+    <div class="relative max-w-5xl mx-auto grid gap-10 lg:grid-cols-[minmax(0,1.5fr)_minmax(280px,0.8fr)] items-start">
+      <div class="animate-fade-up">
+        <p class="font-mono text-[11px] uppercase tracking-[4px] text-[var(--lime)] mb-5">
+          // search-ready comparison hub
+        </p>
+        <h1 class="font-serif text-[clamp(44px,7vw,86px)] leading-[0.95] tracking-tight text-[var(--tx)] mb-6">
+          Compare
+          <br />
+          <em class="not-italic text-[var(--lime)]">Programming Languages</em>
+        </h1>
+        <p class="font-mono text-base text-[var(--tx3)] leading-relaxed max-w-3xl">
+          Langs Compare gives you a clean way to compare programming languages before you pick a stack,
+          switch backend runtimes, or decide what to learn next. Every comparison uses the same scoring
+          model across performance, memory efficiency, learnability, developer speed, ecosystem,
+          concurrency, and type safety.
+        </p>
+
+        <div class="flex flex-wrap gap-3 mt-8">
+          <a
+            href="/playground"
+            class="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[2px] bg-[var(--lime)] text-black px-5 py-3 hover:bg-white transition-colors duration-200"
+          >
+            Open Playground
+            <span class="opacity-60">-&gt;</span>
+          </a>
+          <a
+            href="#featured-comparisons"
+            class="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[2px] border border-[var(--b2)] text-[var(--tx)] px-5 py-3 hover:border-[var(--lime)] hover:text-[var(--lime)] transition-colors duration-200"
+          >
+            View Featured Matchups
+          </a>
+        </div>
+      </div>
+
+      <aside class="animate-fade-up border border-[var(--b1)] rounded-lg bg-[var(--s2)] p-6" style="animation-delay: 120ms">
+        <p class="font-mono text-[11px] uppercase tracking-[3px] text-[var(--tx3)] mb-4">
+          Snapshot
+        </p>
+        <div class="grid grid-cols-2 gap-4">
+          <div class="border border-[var(--b1)] rounded p-4 bg-[var(--s3)]">
+            <div class="font-serif text-4xl text-[var(--lime)] leading-none">{languages.length}</div>
+            <div class="font-mono text-[11px] uppercase tracking-[2px] text-[var(--tx3)] mt-2">
+              Languages
+            </div>
+          </div>
+          <div class="border border-[var(--b1)] rounded p-4 bg-[var(--s3)]">
+            <div class="font-serif text-4xl text-[var(--lime)] leading-none">
+              {Math.floor((languages.length * (languages.length - 1)) / 2)}
+            </div>
+            <div class="font-mono text-[11px] uppercase tracking-[2px] text-[var(--tx3)] mt-2">
+              Pair Pages
+            </div>
+          </div>
+          <div class="border border-[var(--b1)] rounded p-4 bg-[var(--s3)]">
+            <div class="font-serif text-4xl text-[var(--lime)] leading-none">7</div>
+            <div class="font-mono text-[11px] uppercase tracking-[2px] text-[var(--tx3)] mt-2">
+              Core Metrics
+            </div>
+          </div>
+          <div class="border border-[var(--b1)] rounded p-4 bg-[var(--s3)]">
+            <div class="font-serif text-4xl text-[var(--lime)] leading-none">1</div>
+            <div class="font-mono text-[11px] uppercase tracking-[2px] text-[var(--tx3)] mt-2">
+              Shared Scoring Model
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section id="featured-comparisons" class="px-8 sm:px-10 py-20 border-b border-[var(--b1)]">
+    <div class="max-w-6xl mx-auto">
+      <div class="flex flex-col gap-3 mb-10">
+        <p class="font-mono text-[11px] uppercase tracking-[4px] text-[var(--lime)]">
+          // featured comparison pages
+        </p>
+        <h2 class="font-serif text-5xl text-[var(--tx)]">Popular language matchups</h2>
+        <p class="font-mono text-sm text-[var(--tx3)] max-w-3xl leading-relaxed">
+          These are the programming language comparisons developers search most often when they are
+          choosing a first language, replacing a backend, or deciding how much performance they need.
+        </p>
+      </div>
+
+      <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {
+          featuredPairs.map((pair, index) => (
+            <a
+              href={getComparisonPath(pair.left.id, pair.right.id)}
+              class="group border border-[var(--b1)] rounded-lg bg-[var(--s2)] p-6 hover:border-[var(--lime)] transition-colors duration-200 animate-fade-up"
+              style={`animation-delay: ${index * 70}ms`}
+            >
+              <div class="flex items-center gap-3 text-2xl mb-4">
+                <span>{pair.left.icon}</span>
+                <span class="font-serif text-3xl text-[var(--tx)]">{pair.left.name}</span>
+                <span class="font-mono text-xs uppercase tracking-[2px] text-[var(--tx3)]">vs</span>
+                <span>{pair.right.icon}</span>
+                <span class="font-serif text-3xl text-[var(--tx)]">{pair.right.name}</span>
+              </div>
+              <p class="font-mono text-sm text-[var(--tx3)] leading-relaxed">
+                Compare {pair.left.name} and {pair.right.name} across runtime speed, hiring demand,
+                ecosystem maturity, and where each language is strongest in production.
+              </p>
+              <div class="mt-5 font-mono text-[11px] uppercase tracking-[2px] text-[var(--lime)]">
+                Open comparison -&gt;
+              </div>
+            </a>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="px-8 sm:px-10 py-20 border-b border-[var(--b1)]">
+    <div class="max-w-6xl mx-auto">
+      <div class="grid gap-5 lg:grid-cols-4">
+        {rankingBlocks.map((block) => (
+          <div class="border border-[var(--b1)] rounded-lg bg-[var(--s2)] p-6">
+            <h2 class="font-serif text-3xl text-[var(--tx)] mb-4">{block.label}</h2>
+            <ul class="flex flex-col gap-3">
+              {block.items.map((language) => (
+                <li class="flex items-center justify-between gap-4 border-b border-[var(--b1)] pb-3 last:border-b-0 last:pb-0">
+                  <span class="flex items-center gap-2">
+                    <span class="text-xl">{language.icon}</span>
+                    <span class="font-mono text-sm text-[var(--tx)]">{language.name}</span>
+                  </span>
+                  <span class="font-mono text-[11px] uppercase tracking-[2px] text-[var(--lime)]">
+                    {block.value(language)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="px-8 sm:px-10 py-20 border-b border-[var(--b1)]">
+    <div class="max-w-5xl mx-auto">
+      <p class="font-mono text-[11px] uppercase tracking-[4px] text-[var(--lime)] mb-4">
+        // methodology
+      </p>
+      <h2 class="font-serif text-5xl text-[var(--tx)] mb-6">How Langs Compare scores languages</h2>
+      <div class="grid gap-4 md:grid-cols-3">
+        {[
+          [
+            "Systems reality",
+            "Performance, memory efficiency, and latency scores separate languages that feel good in benchmarks from languages that stay predictable in production.",
+          ],
+          [
+            "Developer reality",
+            "Learnability, development speed, and ecosystem scores explain how quickly a team can hire, onboard, ship, and debug with a language.",
+          ],
+          [
+            "Operational reality",
+            "Concurrency, type safety, and job market data show which language is easier to scale, maintain, and invest in for years.",
+          ],
+        ].map(([heading, copy]) => (
+          <div class="border border-[var(--b1)] rounded-lg bg-[var(--s2)] p-6">
+            <h3 class="font-serif text-3xl text-[var(--tx)] mb-3">{heading}</h3>
+            <p class="font-mono text-sm text-[var(--tx3)] leading-relaxed">{copy}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="px-8 sm:px-10 py-20">
+    <div class="max-w-5xl mx-auto text-center">
+      <p class="font-mono text-[11px] uppercase tracking-[4px] text-[var(--lime)] mb-4">
+        // next step
+      </p>
+      <h2 class="font-serif text-5xl text-[var(--tx)] mb-5">Need a live side-by-side breakdown?</h2>
+      <p class="font-mono text-base text-[var(--tx3)] leading-relaxed max-w-3xl mx-auto mb-8">
+        Open the playground to compare any two languages with radar charts, scenario guidance, and code
+        examples. Use the featured pages above if you want an indexable article-style comparison first.
+      </p>
+      <a
+        href="/playground"
+        class="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[2px] bg-[var(--lime)] text-black px-6 py-3 hover:bg-white transition-colors duration-200"
+      >
+        Launch Playground
+        <span class="opacity-60">-&gt;</span>
+      </a>
+    </div>
+  </section>
+</Layout>

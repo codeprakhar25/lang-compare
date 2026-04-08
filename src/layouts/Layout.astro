@@ -1,18 +1,30 @@
 ---
 import "../styles/globals.css";
+import { siteName } from "../lib/language-seo";
 
 interface Props {
   title: string;
   description?: string;
+  canonicalPath?: string;
+  ogType?: "website" | "article";
+  noindex?: boolean;
+  schema?: Record<string, unknown> | Array<Record<string, unknown>>;
 }
 
 const {
   title,
   description = "An honest, detailed comparison of programming languages — performance, memory, latency, pros and cons.",
+  canonicalPath = Astro.url.pathname,
+  ogType = "website",
+  noindex = false,
+  schema,
 } = Astro.props;
 
 const currentPath = Astro.url.pathname;
 const isPlayground = currentPath.includes("playground");
+const pageTitle = `${title} | ${siteName}`;
+const canonicalUrl = new URL(canonicalPath, Astro.site ?? Astro.url.origin).toString();
+const schemaItems = Array.isArray(schema) ? schema : schema ? [schema] : [];
 ---
 
 <!doctype html>
@@ -21,7 +33,22 @@ const isPlayground = currentPath.includes("playground");
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
-    <title>{title} · LangMatrix</title>
+    <meta name="robots" content={noindex ? "noindex, nofollow" : "index, follow, max-image-preview:large"} />
+    <link rel="canonical" href={canonicalUrl} />
+    <meta property="og:site_name" content={siteName} />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={pageTitle} />
+    <meta name="twitter:description" content={description} />
+    <title>{pageTitle}</title>
+    {
+      schemaItems.map((item) => (
+        <script type="application/ld+json" set:html={JSON.stringify(item)} />
+      ))
+    }
   </head>
 
   <body>
@@ -58,6 +85,13 @@ const isPlayground = currentPath.includes("playground");
       >
         Playground
       </a>
+<!-- 
+      <a
+        href="/compare-programming-languages"
+        class="shrink-0 font-mono text-xs tracking-[2px] uppercase px-3 py-1.5 rounded text-[var(--tx3)] hover:text-[var(--tx)] transition-colors duration-200"
+      >
+        Compare
+      </a> -->
     </nav>
     <main class="pt-[56px]">
       <slot />

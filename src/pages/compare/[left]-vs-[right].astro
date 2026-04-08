@@ -1,0 +1,268 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { getLanguageById } from "../../lib/language-seo";
+import {
+  buildWebPageSchema,
+  getAllComparisonPairs,
+  getComparePlaygroundPath,
+  getComparisonIntro,
+  getComparisonMeta,
+  getComparisonSummary,
+  getRecommendationBullets,
+  getRelatedComparisons,
+} from "../../lib/language-seo";
+
+export function getStaticPaths() {
+  return getAllComparisonPairs().map((pair) => ({
+    params: {
+      left: pair.left.id,
+      right: pair.right.id,
+    },
+  }));
+}
+
+const { left: leftId = "", right: rightId = "" } = Astro.params;
+const left = getLanguageById(leftId);
+const right = getLanguageById(rightId);
+
+if (!left || !right) {
+  throw new Error(`Unknown language comparison: ${leftId} vs ${rightId}`);
+}
+
+const meta = getComparisonMeta(left, right);
+const summary = getComparisonSummary(left, right);
+const recommendations = getRecommendationBullets(left, right);
+const relatedComparisons = getRelatedComparisons(left.id, right.id);
+const canonicalPath = `/compare/${[left.id, right.id].sort((a, b) => a.localeCompare(b)).join("-vs-")}`;
+const intro = getComparisonIntro(left, right);
+---
+
+<Layout
+  title={meta.title}
+  description={meta.description}
+  canonicalPath={canonicalPath}
+  schema={buildWebPageSchema({
+    title: meta.title,
+    description: meta.description,
+    path: canonicalPath,
+  })}
+>
+  <section class="relative overflow-hidden border-b border-[var(--b1)] bg-[var(--s1)] px-8 sm:px-10 pt-20 pb-20 md:pt-24 md:pb-24">
+    <div
+      class="pointer-events-none absolute inset-0 opacity-[0.03]"
+      style="background-image: linear-gradient(var(--b1) 1px, transparent 1px), linear-gradient(90deg, var(--b1) 1px, transparent 1px); background-size: 44px 44px;"
+    />
+
+    <div class="relative max-w-6xl mx-auto grid gap-10 lg:grid-cols-[minmax(0,1.3fr)_minmax(320px,0.9fr)] items-start">
+      <div class="animate-fade-up">
+        <p class="font-mono text-[11px] uppercase tracking-[4px] text-[var(--lime)] mb-5">
+          // head-to-head comparison
+        </p>
+        <h1 class="font-serif text-[clamp(42px,6.4vw,78px)] leading-[0.95] tracking-tight text-[var(--tx)] mb-6">
+          {left.name} vs {right.name}
+        </h1>
+        <p class="font-mono text-base text-[var(--tx3)] leading-relaxed max-w-3xl mb-8">
+          {intro}
+        </p>
+        <div class="flex flex-wrap gap-3">
+          <a
+            href={getComparePlaygroundPath(left.id, right.id)}
+            class="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[2px] bg-[var(--lime)] text-black px-5 py-3 hover:bg-white transition-colors duration-200"
+          >
+            Open Interactive Comparison
+            <span class="opacity-60">-&gt;</span>
+          </a>
+          <a
+            href="/compare-programming-languages"
+            class="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[2px] border border-[var(--b2)] text-[var(--tx)] px-5 py-3 hover:border-[var(--lime)] hover:text-[var(--lime)] transition-colors duration-200"
+          >
+            More language comparisons
+          </a>
+        </div>
+      </div>
+
+      <aside class="animate-fade-up border border-[var(--b1)] rounded-lg bg-[var(--s2)] p-6" style="animation-delay: 120ms">
+        <p class="font-mono text-[11px] uppercase tracking-[3px] text-[var(--tx3)] mb-4">
+          Summary
+        </p>
+        <div class="grid gap-3">
+          <div class="border border-[var(--b1)] rounded p-4 bg-[var(--s3)]">
+            <div class="font-mono text-[11px] uppercase tracking-[2px] text-[var(--tx3)] mb-2">
+              Overall edge
+            </div>
+            <div class="font-serif text-3xl text-[var(--lime)]">
+              {summary.overallLeader ? summary.overallLeader.name : "Too close to call"}
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="border border-[var(--b1)] rounded p-4 bg-[var(--s3)]">
+              <div class="font-mono text-[11px] uppercase tracking-[2px] text-[var(--tx3)] mb-2">
+                {left.name} wins
+              </div>
+              <div class="font-serif text-4xl text-[var(--tx)]">{summary.leftWins}</div>
+            </div>
+            <div class="border border-[var(--b1)] rounded p-4 bg-[var(--s3)]">
+              <div class="font-mono text-[11px] uppercase tracking-[2px] text-[var(--tx3)] mb-2">
+                {right.name} wins
+              </div>
+              <div class="font-serif text-4xl text-[var(--tx)]">{summary.rightWins}</div>
+            </div>
+          </div>
+          <div class="border border-[var(--b1)] rounded p-4 bg-[var(--s3)]">
+            <div class="font-mono text-[11px] uppercase tracking-[2px] text-[var(--tx3)] mb-2">
+              Tied metrics
+            </div>
+            <div class="font-mono text-sm text-[var(--tx)]">
+              {summary.balancedMetrics.length > 0 ? summary.balancedMetrics.join(", ") : "None"}
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section class="px-8 sm:px-10 py-20 border-b border-[var(--b1)]">
+    <div class="max-w-6xl mx-auto">
+      <div class="flex flex-col gap-3 mb-8">
+        <p class="font-mono text-[11px] uppercase tracking-[4px] text-[var(--lime)]">
+          // metric scoreboard
+        </p>
+        <h2 class="font-serif text-5xl text-[var(--tx)]">Direct scoring breakdown</h2>
+      </div>
+
+      <div class="overflow-x-auto scrollbar-thin">
+        <table class="w-full border-collapse font-mono text-sm">
+          <thead>
+            <tr>
+              <th class="text-left px-4 py-3 bg-[var(--s2)] text-[11px] uppercase tracking-[2px] text-[var(--lime)] border-b border-[var(--b2)] whitespace-nowrap">Metric</th>
+              <th class="text-left px-4 py-3 bg-[var(--s2)] text-[11px] uppercase tracking-[2px] text-[var(--lime)] border-b border-[var(--b2)] whitespace-nowrap">{left.name}</th>
+              <th class="text-left px-4 py-3 bg-[var(--s2)] text-[11px] uppercase tracking-[2px] text-[var(--lime)] border-b border-[var(--b2)] whitespace-nowrap">{right.name}</th>
+              <th class="text-left px-4 py-3 bg-[var(--s2)] text-[11px] uppercase tracking-[2px] text-[var(--lime)] border-b border-[var(--b2)] whitespace-nowrap">Edge</th>
+            </tr>
+          </thead>
+          <tbody>
+            {
+              summary.insights.map((item) => {
+                return (
+                  <tr class="border-b border-[var(--b1)] odd:bg-[var(--s1)] even:bg-[var(--s2)]">
+                    <td class="px-4 py-3 text-[var(--tx)] whitespace-nowrap">{item.metric}</td>
+                    <td class="px-4 py-3 text-[var(--tx3)]">{left[item.key]}/10</td>
+                    <td class="px-4 py-3 text-[var(--tx3)]">{right[item.key]}/10</td>
+                    <td class="px-4 py-3">
+                      <span class="inline-flex rounded px-2.5 py-1 text-[11px] uppercase tracking-[1.5px] bg-[rgba(163,230,53,0.08)] text-[var(--lime)]">
+                        {item.leader ? `${item.leader.name} +${item.delta}` : "Tie"}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="px-8 sm:px-10 py-20 border-b border-[var(--b1)]">
+    <div class="max-w-6xl mx-auto grid gap-5 lg:grid-cols-2">
+      <article class="border border-[var(--b1)] rounded-lg bg-[var(--s2)] p-6">
+        <div class="flex items-center gap-3 mb-4">
+          <span class="text-3xl">{left.icon}</span>
+          <h2 class="font-serif text-4xl text-[var(--tx)]">When to choose {left.name}</h2>
+        </div>
+        <ul class="flex flex-col gap-3">
+          {recommendations.left.map((point) => (
+            <li class="font-mono text-sm text-[var(--tx3)] leading-relaxed border-b border-[var(--b1)] pb-3 last:border-b-0 last:pb-0">
+              {point}
+            </li>
+          ))}
+        </ul>
+      </article>
+
+      <article class="border border-[var(--b1)] rounded-lg bg-[var(--s2)] p-6">
+        <div class="flex items-center gap-3 mb-4">
+          <span class="text-3xl">{right.icon}</span>
+          <h2 class="font-serif text-4xl text-[var(--tx)]">When to choose {right.name}</h2>
+        </div>
+        <ul class="flex flex-col gap-3">
+          {recommendations.right.map((point) => (
+            <li class="font-mono text-sm text-[var(--tx3)] leading-relaxed border-b border-[var(--b1)] pb-3 last:border-b-0 last:pb-0">
+              {point}
+            </li>
+          ))}
+        </ul>
+      </article>
+    </div>
+  </section>
+
+  <section class="px-8 sm:px-10 py-20 border-b border-[var(--b1)]">
+    <div class="max-w-6xl mx-auto grid gap-5 lg:grid-cols-3">
+      <article class="border border-[var(--b1)] rounded-lg bg-[var(--s2)] p-6 lg:col-span-2">
+        <p class="font-mono text-[11px] uppercase tracking-[3px] text-[var(--lime)] mb-4">
+          Biggest tradeoffs
+        </p>
+        <div class="grid gap-4 md:grid-cols-2">
+          {summary.insights.slice(0, 4).map((item) => (
+            <div class="border border-[var(--b1)] rounded p-4 bg-[var(--s3)]">
+              <div class="font-serif text-3xl text-[var(--tx)] mb-2">{item.metric}</div>
+              <p class="font-mono text-sm text-[var(--tx3)] leading-relaxed">
+                {item.leader
+                  ? `${item.leader.name} has the edge here by ${item.delta} point${item.delta === 1 ? "" : "s"}, which is meaningful if this metric drives your architecture or hiring decision.`
+                  : `${left.name} and ${right.name} are effectively tied here, so this metric should not drive the decision on its own.`}
+              </p>
+            </div>
+          ))}
+        </div>
+      </article>
+
+      <aside class="border border-[var(--b1)] rounded-lg bg-[var(--s2)] p-6">
+        <p class="font-mono text-[11px] uppercase tracking-[3px] text-[var(--lime)] mb-4">
+          Famous projects
+        </p>
+        <div class="space-y-4">
+          <div>
+            <h3 class="font-serif text-3xl text-[var(--tx)] mb-2">{left.name}</h3>
+            <p class="font-mono text-sm text-[var(--tx3)] leading-relaxed">
+              {left.famousProjects.slice(0, 4).join(", ")}
+            </p>
+          </div>
+          <div>
+            <h3 class="font-serif text-3xl text-[var(--tx)] mb-2">{right.name}</h3>
+            <p class="font-mono text-sm text-[var(--tx3)] leading-relaxed">
+              {right.famousProjects.slice(0, 4).join(", ")}
+            </p>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section class="px-8 sm:px-10 py-20">
+    <div class="max-w-6xl mx-auto">
+      <div class="flex flex-col gap-3 mb-8">
+        <p class="font-mono text-[11px] uppercase tracking-[4px] text-[var(--lime)]">
+          // related comparison pages
+        </p>
+        <h2 class="font-serif text-5xl text-[var(--tx)]">Keep comparing</h2>
+      </div>
+
+      <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {
+          relatedComparisons.map((pair) => (
+            <a
+              href={`/compare/${pair.slug}`}
+              class="border border-[var(--b1)] rounded-lg bg-[var(--s2)] p-5 hover:border-[var(--lime)] transition-colors duration-200"
+            >
+              <div class="font-serif text-3xl text-[var(--tx)] mb-2">
+                {pair.left.name} vs {pair.right.name}
+              </div>
+              <p class="font-mono text-sm text-[var(--tx3)] leading-relaxed">
+                See where {pair.left.name} and {pair.right.name} separate on speed, learning curve, ecosystem, and long-term fit.
+              </p>
+            </a>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+</Layout>
